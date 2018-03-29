@@ -3,7 +3,9 @@ package com.xmonit.solar.serialbus.data;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
+
 
 public class ArduinoResponseTest {
 
@@ -13,8 +15,11 @@ public class ArduinoResponseTest {
             "    }\n";
     public static String strJsonResponse = "{\n" +
             "      \"fanMode\": 2, \"fanModeText\": \"AUTO\",\n" +
-            "      \"shunts\": [\n" +
-            "        { \"name\": \"Main 12V Battery Bank\", \"shuntAmps\": -0.01, \"shuntWatts\": -0.00 }\n" +
+            "      \"powerMeters\": [\n" +
+            "        { \"name\": \"Main 12V Battery Bank\", \"watts\": 100," +
+            "          \"current\": { \"amps\": 1.0, \"ratedAmps\": 200, \"ratedMilliVolts\": 75 },\n" +
+            "          \"voltage\": { \"volts\": 12.7, \"analogPin\": 3, " +
+            "          \"assignedVcc\": 4.88, \"assignedR1\": 1010000, \"assignedR2\": 105000 }\n}" +
             "      ],\n" +
             "      \"devices\": [\n" +
             "      { \"name\": \"Bench\",\n" +
@@ -38,17 +43,30 @@ public class ArduinoResponseTest {
             "      \"respMsg\": \"OK\"\n" +
             "    }\n";
 
+    public static ObjectMapper mapper = new ObjectMapper();
+
     public static ArduinoGetResponse buildExpectedResp() {
 
         ArduinoGetResponse expectedGetResp = new ArduinoGetResponse();
 
         expectedGetResp.fanMode = 2;
         expectedGetResp.fanModeText = "AUTO";
+        PowerMeter power = new PowerMeter();
+        power.name = "Main 12V Battery Bank";
+        power.watts = 100.0;
+        expectedGetResp.powerMeters.add(power);
         Shunt shunt = new Shunt();
-        shunt.name = "Main 12V Battery Bank";
-        shunt.shuntAmps = -0.01;
-        shunt.shuntWatts = -0.00;
-        expectedGetResp.shunts.add(shunt);
+        shunt.amps = 1.0;
+        shunt.ratedAmps = 200.0;
+        shunt.ratedMilliVolts = 75.0;
+        power.current = shunt;
+        Voltmeter voltage = new Voltmeter();
+        voltage.volts = 12.7;
+        voltage.analogPin = 3;
+        voltage.assignedVcc = 4.88;
+        voltage.assignedR1 = 1010000.0;
+        voltage.assignedR2 = 105000.0;
+        power.voltage = voltage;
 
         Device device = new Device();
         device.name = "Bench";
@@ -97,15 +115,72 @@ public class ArduinoResponseTest {
     @Test
     public void jsonObjectMappingTest() throws Exception {
 
-        ObjectMapper mapper = new ObjectMapper();
-        ArduinoGetResponse getResp = mapper.readValue(strJsonResponse, ArduinoGetResponse.class);
 
-        System.out.println(getResp);
+        ArduinoGetResponse getResp = mapper.readValue(strJsonResponse, ArduinoGetResponse.class);
 
         ArduinoGetResponse expectedGetResp = buildExpectedResp();
         assertEquals(expectedGetResp.devices.get(0).fans.get(0), getResp.devices.get(0).fans.get(0));
         assertEquals(expectedGetResp.devices.get(0).tempSensors, getResp.devices.get(0).tempSensors);
         assertEquals(expectedGetResp, getResp);
 
+    }
+
+    @Test
+    public void deepCopyTest() throws Exception {
+        ArduinoGetResponse srcObj = buildExpectedResp();
+        ArduinoGetResponse destObj = srcObj.deepCopy();
+        assertNotSame(srcObj,destObj);
+        assertEquals(srcObj,destObj);
+        assertNotSame(srcObj.devices,destObj.devices);
+        assertEquals(srcObj.devices,destObj.devices);
+        destObj.devices.get(1).fans.get(0).offTemp = 10.0;
+        assertNotEquals(srcObj,destObj);
+
+    }
+
+    @Test
+    public void validMirrorCopyTest() throws Exception {
+        ArduinoGetResponse srcObj = mapper.readValue(strJsonResponse,ArduinoGetResponse.class);
+        ArduinoGetResponse destObj = srcObj.deepCopy();
+        assertNotSame(srcObj,destObj);
+        assertEquals(srcObj,destObj);
+        destObj.fanMode = 99;
+        destObj.devices.get(1).tempSensors.get(0).temp = 999.0;
+        assertNotEquals(srcObj,destObj);
+        destObj.copy(srcObj);
+        assertEquals(srcObj,destObj);
+    }
+
+    @Test
+    public void invalidMirrorCopyTest() throws Exception {
+        ArduinoGetResponse srcObj = mapper.readValue(strJsonResponse,ArduinoGetResponse.class);
+        ArduinoGetResponse destObj = srcObj.deepCopy();
+        destObj.fanMode = 99;
+        destObj.devices.remove(1);
+        assertNotEquals(srcObj,destObj);
+        try {
+            destObj.copy(srcObj);
+            fail("Should not be able to copy objects with different size device arrays");
+        } catch (Exception ex) {
+            assertNotEquals(srcObj,destObj);
+        }
+
+        try {
+            destObj = srcObj.deepCopy();
+            destObj.powerMeters.remove(0);
+            destObj.copy(srcObj);
+            fail("Should not be able to copy objects with different size power meter arrays");
+        } catch (Exception ex) {
+            assertNotEquals(srcObj,destObj);
+        }
+
+        try {
+            destObj = srcObj.deepCopy();
+            destObj.devices.get(1).tempSensors.remove(0);
+            srcObj.copy(destObj);
+            fail("Should not be able to copy objects with different size temp sensor arrays");
+        } catch (Exception ex) {
+            assertNotEquals(srcObj,destObj);
+        }
     }
 }

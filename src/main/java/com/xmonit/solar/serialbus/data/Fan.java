@@ -2,8 +2,11 @@ package com.xmonit.solar.serialbus.data;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
+
 @Data
-public class Fan {
+public class Fan implements Serializable {
 
     public String name;
     public Double offTemp;

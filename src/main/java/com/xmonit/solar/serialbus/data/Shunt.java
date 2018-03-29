@@ -2,34 +2,40 @@ package com.xmonit.solar.serialbus.data;
 
 import lombok.Data;
 
-@Data
-public class Shunt {
+import java.io.Serializable;
 
-    public String name;
-    public Double shuntAmps;
-    public Double shuntWatts;
+
+@Data
+public class Shunt implements Serializable {
+
+    public Double amps;
+    public Double ratedAmps;
+    public Double ratedMilliVolts;
 
     public void copy(Shunt src) {
         if (src == null) {
             invalidate();
         } else {
-            name = src.name;
-            shuntAmps = src.shuntAmps;
-            shuntWatts = src.shuntWatts;
+            amps = src.amps;
+            ratedAmps = src.ratedAmps;
+            ratedMilliVolts = src.ratedMilliVolts;
         }
     }
 
     public double getAmpsAsDouble() {
-        return shuntAmps == null ? Double.NaN : shuntAmps.doubleValue();
+        return amps == null ? Double.NaN : amps.doubleValue();
+    }
+    public double getRatedAmpsAsDouble() {
+        return ratedAmps == null ? Double.NaN : ratedAmps.doubleValue();
+    }
+    public double getRatedMilliVoltsAsDouble() {
+        return ratedMilliVolts == null ? Double.NaN : ratedMilliVolts.doubleValue();
     }
 
-    public double getWattsAsDouble() {
-        return shuntWatts == null ? Double.NaN : shuntWatts.doubleValue();
-    }
 
     public void invalidate() {
-        name = null;
-        shuntAmps = null;
-        shuntWatts = null;
+        amps = null;
+        ratedAmps = null;
+        ratedMilliVolts = null;
     }
 }

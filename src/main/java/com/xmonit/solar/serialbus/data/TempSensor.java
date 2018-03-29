@@ -2,8 +2,11 @@ package com.xmonit.solar.serialbus.data;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
+
 @Data
-public class TempSensor {
+public class TempSensor implements Serializable {
 
     public Double heatIndex;
     public Double humidity;

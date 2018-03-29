@@ -2,8 +2,10 @@ package com.xmonit.solar.serialbus.data;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class ArduinoResponse {
+public class ArduinoResponse implements Serializable {
 
     public Integer respCode;
     public String respMsg;
