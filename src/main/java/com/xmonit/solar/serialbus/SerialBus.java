@@ -104,15 +104,19 @@ public class SerialBus {
     }
 
 
+    static short requestId = 0;
+
     protected synchronized String execute(String command) throws SerialBusException {
 
         logger.debug(command);
 
         try {
+            int reqId = ++requestId;
             OutputStream outputStream = serialPort.getOutputStream();
-            outputStream.write(command.getBytes());
+            String data = command + "|" + reqId;
+            outputStream.write(data.getBytes());
             outputStream.flush();
-            return extractResponse(serialPort.getInputStream());
+            return extractResponse(serialPort.getInputStream(),reqId);
         } catch (SerialBusException ex) {
             logger.error("SerialBus.execute('" + command + "') failed.");
             close();
@@ -124,13 +128,13 @@ public class SerialBus {
     }
 
 
-    private String extractResponse(InputStream respInputStream) throws Exception {
+    private String extractResponse(InputStream respInputStream, int reqId) throws Exception {
 
-        return extractResponse(new InputStreamReader(respInputStream));
+        return extractResponse(new InputStreamReader(respInputStream), reqId);
     }
 
 
-    private String extractResponse(Reader respReader) throws Exception {
+    private String extractResponse(Reader respReader, int reqId) throws Exception {
 
         try {
 
@@ -146,6 +150,7 @@ public class SerialBus {
 
             String line;
             StringBuilder sb = new StringBuilder();
+            String resp = "";
             boolean bRespStarted = false;
             boolean bFoundEnd = false;
             boolean advancedToNextPound = false;
@@ -160,16 +165,56 @@ public class SerialBus {
                         advancedToNextPound = false;
                         line = '#' + line;
                     }
-                    if (line.equals("#END#")) {
+                    if (line.matches("#END[:0-9]*#")) {
+                        resp = sb.toString();
                         bFoundEnd = true;
+                        String[] tokens = line.replace("#","").split(":");
+                        if ( tokens.length > 1 ) {
+                            int id = Integer.parseInt(tokens[1]);
+                            if ( tokens.length > 2 ) {
+                                int len = Integer.parseInt(tokens[2]);
+                                int respLen = resp.length() - 1;
+                                if ( len != respLen ) {
+                                    logger.warn("Request #" + reqId + " response footer contains length=" + len + " but received " + respLen);
+                                }
+                                if ( tokens.length > 3 ) {
+                                    int checksum = Integer.parseInt(tokens[3]);
+                                    int computedChecksum = 0;
+                                    byte[] bytes = resp.getBytes();
+                                    for ( int i = 0; i < respLen; i++) {
+                                        computedChecksum += bytes[i];
+                                    }
+                                    long computedChecksumL = 0 | computedChecksum;
+                                    if ( checksum != computedChecksumL ) {
+                                        logger.warn("Request #" + reqId + " response footer contains checksum=" + checksum
+                                                + " but received " + computedChecksumL);
+                                    }
+                                }
+
+                            }
+                            if ( id != reqId ) {
+                                throw new SerialBusException("Request ID mismatch in #END#.  Expected: " + reqId + " Found: " + id, 99);
+                            }
+                        }
                         break;
-                    } else if (line.endsWith("#BEGIN#")) {
+                    } else if (line.matches(".*#BEGIN[:0-9]*#")) {
                         if (sb.length() > 0) {
                             logger.warn("Found another #BEGIN#.  Ignoring buffered data: " + sb.toString());
                             sb.setLength(0);
                         }
-                        if (!line.equals("#BEGIN#")) {
-                            logger.warn("Ignoring unexpected data before #BEGIN#: '" + line.replaceAll("#BEGIN#$", "") + "'");
+                        if (!line.matches("#BEGIN[:0-9]*#")) {
+                            logger.warn("Ignoring unexpected data before #BEGIN#: '" + line.replaceAll("#BEGIN[:0-9]*#.*", "") + "'");
+                        }
+                        String[] tokens = line.replace("#","").split("[:]+");
+                        if ( tokens.length > 1 ) {
+                            try {
+                                int id = Integer.parseInt(tokens[1]);
+                                if ( id != reqId ) {
+                                    throw new SerialBusException("Request ID mismatch in #BEGIN#.  Expected: " + reqId + " Found: " + id, 99);
+                                }
+                            } catch (Exception ex) {
+                                logger.error("Failed extracting request id from #BEGIN# header: " + line, ex );
+                            }
                         }
                         bRespStarted = true;
                     } else if (bRespStarted) {
@@ -209,7 +254,7 @@ public class SerialBus {
                 logger.debug("#END# not found. Ignoring response: " + sb.toString());
                 throw new SerialBusException("Did not find #END# marker in serial bus response.", -1);
             }
-            return sb.toString();
+            return resp;
         } catch (SerialBusException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -245,7 +290,8 @@ public class SerialBus {
         port.setSerialPortParams(baudRate,
                 SerialPort.DATABITS_8,
                 SerialPort.STOPBITS_1,
-                SerialPort.PARITY_NONE);
+                SerialPort.PARITY_ODD);
+                //SerialPort.PARITY_NONE);
         serialPort = port;
         serialPort.notifyOnDataAvailable(true);
         serialPort.notifyOnOutputEmpty(true);

@@ -19,6 +19,7 @@ public class PowerMeter implements Serializable {
             invalidate();
         } else {
             name = src.name;
+            watts = src.watts;
             voltage.copy(src.voltage);
             current.copy(src.current);
         }
