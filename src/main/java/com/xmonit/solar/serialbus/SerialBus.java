@@ -16,6 +16,9 @@ import java.util.List;
 
 public class SerialBus {
 
+    public static final Integer NO_VALIDATION_REQ_ID = -1;
+    public static final Integer AUTO_GENERATE_REQ_ID = null;
+
     private static final Logger logger = LoggerFactory.getLogger(SerialBus.class);
 
     public String commPortName;
@@ -56,7 +59,7 @@ public class SerialBus {
     }
 
 
-    public synchronized String execute(String cmd, String portName) throws Exception {
+    public synchronized String execute(String cmd, String portName, Integer explicitReqId) throws Exception {
 
         if (cmd == null || cmd.trim().isEmpty()) {
             cmd = config.getCmd();
@@ -75,7 +78,7 @@ public class SerialBus {
             open(portName);
         }
 
-        return execute(cmd);
+        return execute(cmd, explicitReqId);
     }
 
 
@@ -106,12 +109,12 @@ public class SerialBus {
 
     static short requestId = 0;
 
-    protected synchronized String execute(String command) throws SerialBusException {
+    protected synchronized String execute(String command, Integer explicitReqId ) throws SerialBusException {
 
         logger.debug(command);
 
         try {
-            int reqId = ++requestId;
+            int reqId = explicitReqId != null ? explicitReqId : ++requestId;
             OutputStream outputStream = serialPort.getOutputStream();
             String data = command + "|" + reqId;
             outputStream.write(data.getBytes());
@@ -169,15 +172,22 @@ public class SerialBus {
                         resp = sb.toString();
                         bFoundEnd = true;
                         String[] tokens = line.replace("#","").split(":");
-                        if ( tokens.length > 1 ) {
+                        String strErrMsg = null;
+                        if ( tokens.length != 4 ) {
+                            strErrMsg = "Invalid #END# footer. Expected '#END:{req id}:{resp lenght}:{checksum}#'. Found: "
+                            + line;
+                        } else if ( reqId != NO_VALIDATION_REQ_ID ) {
                             int id = Integer.parseInt(tokens[1]);
-                            if ( tokens.length > 2 ) {
+                            if ( id != reqId ) {
+                                strErrMsg = "Request #" + reqId + " response footer request ID does not match: " + id;
+                            } else {
                                 int len = Integer.parseInt(tokens[2]);
                                 int respLen = resp.length() - 1;
                                 if ( len != respLen ) {
-                                    logger.warn("Request #" + reqId + " response footer contains length=" + len + " but received " + respLen);
+                                    strErrMsg = "Request #" + reqId + " response footer contains length=" + len
+                                            + " but received " + respLen;
                                 }
-                                if ( tokens.length > 3 ) {
+                                else if ( tokens.length > 3 ) {
                                     int checksum = Integer.parseInt(tokens[3]);
                                     int computedChecksum = 0;
                                     byte[] bytes = resp.getBytes();
@@ -186,15 +196,15 @@ public class SerialBus {
                                     }
                                     long computedChecksumL = 0 | computedChecksum;
                                     if ( checksum != computedChecksumL ) {
-                                        logger.warn("Request #" + reqId + " response footer contains checksum=" + checksum
-                                                + " but received " + computedChecksumL);
+                                        strErrMsg = "Request #" + reqId + " response footer contains checksum=" + checksum
+                                                + " but received " + computedChecksumL;
                                     }
                                 }
 
                             }
-                            if ( id != reqId ) {
-                                throw new SerialBusException("Request ID mismatch in #END#.  Expected: " + reqId + " Found: " + id, 99);
-                            }
+                        }
+                        if ( strErrMsg != null ) {
+                            throw new SerialBusException(strErrMsg, 97);
                         }
                         break;
                     } else if (line.matches(".*#BEGIN[:0-9]*#")) {
@@ -203,17 +213,21 @@ public class SerialBus {
                             sb.setLength(0);
                         }
                         if (!line.matches("#BEGIN[:0-9]*#")) {
-                            logger.warn("Ignoring unexpected data before #BEGIN#: '" + line.replaceAll("#BEGIN[:0-9]*#.*", "") + "'");
+                            String strIgnored = line.replaceAll("#BEGIN[:0-9]*#","");
+                            logger.warn("Ignoring unexpected data before #BEGIN#: '" + strIgnored + "'");
+                            line = line.substring(strIgnored.length());
                         }
                         String[] tokens = line.replace("#","").split("[:]+");
-                        if ( tokens.length > 1 ) {
+                        if ( tokens.length != 2 ) {
+                            throw new SerialBusException("Invalid #BEGIN# header. Expected '#BEGIN:{req id}#'. Found: " + line, 98 );
+                        } else if ( reqId != NO_VALIDATION_REQ_ID ){
                             try {
                                 int id = Integer.parseInt(tokens[1]);
                                 if ( id != reqId ) {
                                     throw new SerialBusException("Request ID mismatch in #BEGIN#.  Expected: " + reqId + " Found: " + id, 99);
                                 }
                             } catch (Exception ex) {
-                                logger.error("Failed extracting request id from #BEGIN# header: " + line, ex );
+                                throw new SerialBusException("Failed extracting request id from #BEGIN# header: " + line, ex );
                             }
                         }
                         bRespStarted = true;
@@ -284,7 +298,7 @@ public class SerialBus {
 
     private void open(String commPortName) throws Exception {
 
-        final int baudRate = 57600;
+        final int baudRate = config.getBaudRate();
         findPortId(commPortName);
         SerialPort port = (SerialPort) portId.open("java-arduino", 2000);
         port.setSerialPortParams(baudRate,

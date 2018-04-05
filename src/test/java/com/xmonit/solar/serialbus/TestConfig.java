@@ -14,4 +14,6 @@ public class TestConfig implements SerialBusConfig {
     public String getCommPortRegEx() {
         return commPortRegEx;
     }
+
+    public Integer getBaudRate() { return 57600; }
 }

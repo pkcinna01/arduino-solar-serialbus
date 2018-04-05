@@ -7,4 +7,6 @@ public interface SerialBusConfig {
 
     public String getCommPortRegEx();
 
+    public Integer getBaudRate();
+
 }
