@@ -5,21 +5,83 @@
 Library (java jar) supporting communication with Arduino Solar project over USB
 
 
-## Supported string commands via API SerialBus.execute() call
+## SerialBus.execute(String command) 
 
 ```
-	GET
-		List status and configuration of devices. Default: GET
-	SET_FAN_MODE,{ON|OFF|AUTO},{PERSIST|TRANSIENT}
-		Turn ON or OFF all fans.
-		AUTO to let Arduino control them using configured thresholds 
-		PERSIST will remember fan mode after arduino reboots.
-	SET_FAN_THRESHOLDS,{device filter},{fan filter},{on temp},{off temp},{PERSIST|TRANSIENT}
-		Change the temperatures which cause a fan to turn on/off (fahrenheit).
-		Use * for filter to match all devices or all fans. Otherwise the filter
-		will match if the device or fan name contains the filter string.
+Command syntax (commands sent to Arduino via USB):
 
-		
+GET
+
+	List status and configuration of devices (JSON format).
+
+VERSION
+
+	Show version number and build date
+
+SET_OUTPUT_FORMAT,{format},{persistence}
+
+	Arduino serial bus responses format
+
+	format:
+			JSON_COMPACT - Minimize white space in JSON
+			JSON_PRETTY - Use indentation and white space (DEFAULT)
+	persistence:
+			PERSIST - Save to EEPROM and remember after Arduino reboot
+			TRANSIENT - Do not save to EEPROM
+
+SET_FAN_MODE,{mode},{persistence}
+
+	Turn on or off all fans (or set to automatic)
+
+	mode:
+			ON - Turn on all fans
+			OFF - Turn off all fans
+			AUTO - Automatically control fans using configured thresholds (DEFAULT)
+	persistence:
+			PERSIST - Save to EEPROM and remember after Arduino reboot
+			TRANSIENT - Do not save to EEPROM
+
+SET_FAN_THRESHOLDS,{device filter},{fan filter},{on temp},{off temp},{persistence}
+
+	Change the temperatures which cause a fan to turn on/off (fahrenheit).
+
+	device filter:
+			* - Match all devices
+			{string} - Device name must start with or equal this
+	fan filter:
+			* - Match all fans for each device matched
+			{string} - Fan name must start with or equal this for each device matched
+	on temp:
+			{numeric} - Fan on threshold (fahrenheit)
+	off temp:
+			{numeric} - Fan off threshold (fahrenheit)
+	persistence:
+			PERSIST - Save to EEPROM and remember after Arduino reboot
+			TRANSIENT - Do not save to EEPROM
+
+SET_POWER_METER,{component},{power meter filter},{value},{persistence}
+
+	Calibrate voltage drop and resistors on the internal voltage divider.
+
+	component:
+			VCC - Defaults to 5 volts but power source to Arduino could make it higher or lower
+			R1 - Resistor 1 of voltage divider (example 'value': 1010000.0)
+			R2 - Resistor 2 of voltage divider (example 'value': 100500.0)
+	power meter filter:
+			* - Match all power meters
+			{string} - Power meter name must start with or equal this
+	value:
+			{numeric} - Value assigned to the component (volts if component=VCC, otherwise OHMS)
+	persistence:
+			PERSIST - Save to EEPROM and remember after Arduino reboot
+			TRANSIENT - Do not save to EEPROM
+
+
+Initialization configuration options
+	commPortRegEx: regular expression used to find arduino serial port.  Linux will usually be /dev/tty... 
+		Example: ttyACM.*
+	baudRate: USB baud rate (long USB cables or electronic interference may decrease maximum reliable speed)
+		Example: 57600
 ```
 
 ## Motivation

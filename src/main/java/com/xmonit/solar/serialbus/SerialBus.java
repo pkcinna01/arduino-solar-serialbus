@@ -187,20 +187,17 @@ public class SerialBus {
                                     strErrMsg = "Request #" + reqId + " response footer contains length=" + len
                                             + " but received " + respLen;
                                 }
-                                else if ( tokens.length > 3 ) {
-                                    int checksum = Integer.parseInt(tokens[3]);
-                                    int computedChecksum = 0;
-                                    byte[] bytes = resp.getBytes();
-                                    for ( int i = 0; i < respLen; i++) {
-                                        computedChecksum += bytes[i];
-                                    }
-                                    long computedChecksumL = 0 | computedChecksum;
-                                    if ( checksum != computedChecksumL ) {
-                                        strErrMsg = "Request #" + reqId + " response footer contains checksum=" + checksum
-                                                + " but received " + computedChecksumL;
-                                    }
+                                int checksum = Integer.parseInt(tokens[3]);
+                                int computedChecksum = 0;
+                                byte[] bytes = resp.getBytes();
+                                for ( int i = 0; i < respLen; i++) {
+                                    computedChecksum += bytes[i];
                                 }
-
+                                long computedChecksumL = 0 | computedChecksum;
+                                if ( checksum != computedChecksumL ) {
+                                    strErrMsg = "Request #" + reqId + " response footer contains checksum=" + checksum
+                                            + " but received " + computedChecksumL;
+                                }
                             }
                         }
                         if ( strErrMsg != null ) {
