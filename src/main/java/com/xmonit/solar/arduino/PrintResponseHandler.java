@@ -1,11 +1,11 @@
-package com.xmonit.solar.serialbus;
+package com.xmonit.solar.arduino;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.PrintWriter;
 
-public class PrintResponseHandler implements SerialBusResponseProcessor {
+public class PrintResponseHandler implements ArduinoResponseProcessor {
 
     PrintWriter pw;
 
@@ -18,11 +18,11 @@ public class PrintResponseHandler implements SerialBusResponseProcessor {
     }
 
     @Override
-    public void invalidate(SerialBus serialBus, Exception ex) {
+    public void invalidate(ArduinoSerialBus serialBus, Exception ex) {
     }
 
     @Override
-    public void process(SerialBus serialBus, JsonNode resp) throws SerialBusException {
+    public void process(ArduinoSerialBus serialBus, JsonNode resp) throws ArduinoException {
         try {
             ObjectMapper mapper = new ObjectMapper();
             Object json = mapper.readValue(resp.toString(), Object.class);
@@ -30,7 +30,7 @@ public class PrintResponseHandler implements SerialBusResponseProcessor {
             pw.flush();
         } catch (Exception ex) {
             invalidate(serialBus, ex);
-            throw new SerialBusException("Failed writing JSON response.", ex);
+            throw new ArduinoException("Failed writing JSON response.", ex);
         }
     }
 }

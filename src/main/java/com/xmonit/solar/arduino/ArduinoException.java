@@ -1,17 +1,17 @@
-package com.xmonit.solar.serialbus;
+package com.xmonit.solar.arduino;
 
 import java.util.Optional;
 
-public class SerialBusException extends Exception {
+public class ArduinoException extends Exception {
 
     public Optional<Integer> reasonCode = Optional.empty();
 
-    public SerialBusException(String msg, Exception cause) {
+    public ArduinoException(String msg, Exception cause) {
 
         super(msg,cause);
     }
 
-    public SerialBusException(String msg, int reasonCode) {
+    public ArduinoException(String msg, int reasonCode) {
         this(msg,null);
         this.reasonCode = Optional.of(reasonCode);
     }

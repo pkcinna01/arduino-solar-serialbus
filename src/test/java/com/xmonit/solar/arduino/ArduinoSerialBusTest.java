@@ -1,13 +1,13 @@
-package com.xmonit.solar.serialbus;
+package com.xmonit.solar.arduino;
 
-import com.xmonit.solar.serialbus.data.ArduinoResponseTest;
+import com.xmonit.solar.arduino.data.ArduinoResponseTest;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 
-public class SerialBusTest {
+public class ArduinoSerialBusTest {
 
-    static SerialBus serialBus;
+    static ArduinoSerialBus serialBus;
 
     @org.junit.Test
     public void parseAndPrintArduinoResponse() throws Exception {
@@ -23,7 +23,7 @@ public class SerialBusTest {
     @Before
     public void initAll() {
 
-        serialBus = new SerialBus( new TestConfig(), new PrintResponseHandler());
+        serialBus = new ArduinoSerialBus( new TestConfigArduino(), new PrintResponseHandler());
         serialBus.commPortName = "ttyACM999";
     }
 

@@ -1,6 +1,6 @@
-package com.xmonit.solar.serialbus;
+package com.xmonit.solar.arduino;
 
-public class TestConfig implements SerialBusConfig {
+public class TestConfigArduino implements ArduinoConfig {
 
     String cmd = "GET";
     String commPortRegEx = "ttyACM.*";

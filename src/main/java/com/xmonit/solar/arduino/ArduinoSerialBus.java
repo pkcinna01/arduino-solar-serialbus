@@ -1,4 +1,4 @@
-package com.xmonit.solar.serialbus;
+package com.xmonit.solar.arduino;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -14,31 +14,31 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class SerialBus {
+public class ArduinoSerialBus {
 
     public static final Integer NO_VALIDATION_REQ_ID = -1;
     public static final Integer AUTO_GENERATE_REQ_ID = null;
 
-    private static final Logger logger = LoggerFactory.getLogger(SerialBus.class);
+    private static final Logger logger = LoggerFactory.getLogger(ArduinoSerialBus.class);
 
     public String commPortName;
 
-    protected SerialBusConfig config;
+    protected ArduinoConfig config;
     protected CommPortIdentifier portId = null;
-    protected LinkedList<SerialBusResponseProcessor> responseProcessors = new LinkedList();
+    protected LinkedList<ArduinoResponseProcessor> responseProcessors = new LinkedList();
     protected SerialPort serialPort = null;
 
     private boolean bPortOpen = false;
     private ObjectMapper mapper = new ObjectMapper();
 
 
-    public SerialBus(SerialBusConfig config, List<SerialBusResponseProcessor> rpList) {
+    public ArduinoSerialBus(ArduinoConfig config, List<ArduinoResponseProcessor> rpList) {
         this.config = config;
         responseProcessors.addAll(rpList);
     }
 
 
-    public SerialBus(SerialBusConfig config, SerialBusResponseProcessor rp) {
+    public ArduinoSerialBus(ArduinoConfig config, ArduinoResponseProcessor rp) {
         this(config, Collections.singletonList(rp));
     }
 
@@ -95,7 +95,7 @@ public class SerialBus {
 
 
     public void processResponse(JsonNode respNode) throws Exception {
-        for (SerialBusResponseProcessor p : responseProcessors) {
+        for (ArduinoResponseProcessor p : responseProcessors) {
             p.process(this,respNode);
         }
     }
@@ -109,7 +109,7 @@ public class SerialBus {
 
     static short requestId = 0;
 
-    protected synchronized String execute(String command, Integer explicitReqId ) throws SerialBusException {
+    protected synchronized String execute(String command, Integer explicitReqId ) throws ArduinoException {
 
         logger.debug(command);
 
@@ -120,13 +120,13 @@ public class SerialBus {
             outputStream.write(data.getBytes());
             outputStream.flush();
             return extractResponse(serialPort.getInputStream(),reqId);
-        } catch (SerialBusException ex) {
-            logger.error("SerialBus.execute('" + command + "') failed.");
+        } catch (ArduinoException ex) {
+            logger.error("ArduinoSerialBus.execute('" + command + "') failed.");
             close();
             throw ex;
         } catch (Exception ex) {
             close();
-            throw new SerialBusException("SerialBus.execute('" + command + "') failed.", ex);
+            throw new ArduinoException("ArduinoSerialBus.execute('" + command + "') failed.", ex);
         }
     }
 
@@ -201,7 +201,7 @@ public class SerialBus {
                             }
                         }
                         if ( strErrMsg != null ) {
-                            throw new SerialBusException(strErrMsg, 97);
+                            throw new ArduinoException(strErrMsg, 97);
                         }
                         break;
                     } else if (line.matches(".*#BEGIN[:0-9]*#")) {
@@ -216,15 +216,15 @@ public class SerialBus {
                         }
                         String[] tokens = line.replace("#","").split("[:]+");
                         if ( tokens.length != 2 ) {
-                            throw new SerialBusException("Invalid #BEGIN# header. Expected '#BEGIN:{req id}#'. Found: " + line, 98 );
+                            throw new ArduinoException("Invalid #BEGIN# header. Expected '#BEGIN:{req id}#'. Found: " + line, 98 );
                         } else if ( reqId != NO_VALIDATION_REQ_ID ){
                             try {
                                 int id = Integer.parseInt(tokens[1]);
                                 if ( id != reqId ) {
-                                    throw new SerialBusException("Request ID mismatch in #BEGIN#.  Expected: " + reqId + " Found: " + id, 99);
+                                    throw new ArduinoException("Request ID mismatch in #BEGIN#.  Expected: " + reqId + " Found: " + id, 99);
                                 }
                             } catch (Exception ex) {
-                                throw new SerialBusException("Failed extracting request id from #BEGIN# header: " + line, ex );
+                                throw new ArduinoException("Failed extracting request id from #BEGIN# header: " + line, ex );
                             }
                         }
                         bRespStarted = true;
@@ -263,14 +263,14 @@ public class SerialBus {
             }
             if (!bFoundEnd) {
                 logger.debug("#END# not found. Ignoring response: " + sb.toString());
-                throw new SerialBusException("Did not find #END# marker in serial bus response.", -1);
+                throw new ArduinoException("Did not find #END# marker in serial bus response.", -1);
             }
             return resp;
-        } catch (SerialBusException ex) {
+        } catch (ArduinoException ex) {
             throw ex;
         } catch (Exception ex) {
             String msg = "Failed reading or parsing data from Arduino";
-            throw new SerialBusException(msg, ex);
+            throw new ArduinoException(msg, ex);
         }
     }
 
@@ -289,7 +289,7 @@ public class SerialBus {
                 }
             }
         }
-        throw new SerialBusException("No serial port matched regex: '" + commPortName + "'", -1);
+        throw new ArduinoException("No serial port matched regex: '" + commPortName + "'", -1);
     }
 
 

@@ -1,6 +1,6 @@
-package com.xmonit.solar.serialbus.data;
+package com.xmonit.solar.arduino.data;
 
-import com.xmonit.solar.serialbus.SerialBusException;
+import com.xmonit.solar.arduino.ArduinoException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -36,8 +36,8 @@ public class ArduinoGetResponse extends ArduinoResponse implements Serializable 
         for (Device d : devices) {
             d.invalidate();
         }
-        if (ex instanceof SerialBusException) {
-            SerialBusException sex = (SerialBusException) ex;
+        if (ex instanceof ArduinoException) {
+            ArduinoException sex = (ArduinoException) ex;
             respCode = sex.reasonCode.orElse(-1);
         } else {
             respCode = -1;
@@ -63,10 +63,10 @@ public class ArduinoGetResponse extends ArduinoResponse implements Serializable 
 
         if (respCode == 0) {
             if (src.powerMeters.size() != powerMeters.size()) {
-                throw new SerialBusException("Arduino power meter count changed from "
+                throw new ArduinoException("Arduino power meter count changed from "
                         + src.powerMeters.size() + " to " + powerMeters.size() + " (unsupported). ", -1);
             } else if (src.devices.size() != devices.size()) {
-                throw new SerialBusException("Arduino device count changed from "
+                throw new ArduinoException("Arduino device count changed from "
                         + src.devices.size() + " to " + devices.size() + " (unsupported). ", -1);
             }
         }

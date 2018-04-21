@@ -1,9 +1,9 @@
-package com.xmonit.solar.serialbus;
+package com.xmonit.solar.arduino;
 
 import java.io.PrintWriter;
 
 
-public class SerialBusAbout {
+public class ArduinoAbout {
 
     class CommandParamInfo {
         String name;

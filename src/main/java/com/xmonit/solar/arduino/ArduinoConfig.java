@@ -1,7 +1,7 @@
-package com.xmonit.solar.serialbus;
+package com.xmonit.solar.arduino;
 
 
-public interface SerialBusConfig {
+public interface ArduinoConfig {
 
     public String getCmd();
 

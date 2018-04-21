@@ -1,4 +1,4 @@
-package com.xmonit.solar.serialbus.data;
+package com.xmonit.solar.arduino.data;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
