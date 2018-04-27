@@ -4,12 +4,10 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import purejavacomm.CommPortIdentifier;
-import purejavacomm.SerialPort;
 
 import java.io.*;
 import java.util.Collections;
-import java.util.Enumeration;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,14 +17,14 @@ public class ArduinoSerialBus {
     public static final Integer NO_VALIDATION_REQ_ID = -1;
     public static final Integer AUTO_GENERATE_REQ_ID = null;
 
+    protected static short requestId = 0;
+
     private static final Logger logger = LoggerFactory.getLogger(ArduinoSerialBus.class);
 
-    public String commPortName;
-
     protected ArduinoConfig config;
-    protected CommPortIdentifier portId = null;
     protected LinkedList<ArduinoResponseProcessor> responseProcessors = new LinkedList();
-    protected SerialPort serialPort = null;
+    protected ArduinoSerialPort serialPort = new PureJavaCommSerialPortImpl();
+    //protected ArduinoSerialPort serialPort = new JSerialCommSerialPortImpl();
 
     private boolean bPortOpen = false;
     private ObjectMapper mapper = new ObjectMapper();
@@ -49,12 +47,12 @@ public class ArduinoSerialBus {
         if (serialPort != null) {
             try {
                 serialPort.close();
-                logger.info("USB port closed for " + commPortName);
+                logger.info("USB port closed for " + serialPort.getPortName());
             } catch (Exception ex) {
-                logger.warn("USB port '" + commPortName + "' close failed.", ex);
+                logger.warn("USB port '" + serialPort.getPortName() + "' close failed.", ex);
             }
         } else {
-            logger.warn("Serial port close attempted but port is null.  Port: " + commPortName);
+            logger.warn("Serial port close attempted but port is null.  Port: " + serialPort.getPortName());
         }
     }
 
@@ -69,22 +67,16 @@ public class ArduinoSerialBus {
             portName = config.getCommPortRegEx();
         }
 
-        if (commPortName != null && !commPortName.matches(portName)) {
-            logger.warn("Existing serial port id '" + commPortName + "' does not match pattern '" + portName + "'.");
-            close();
-        }
-
-        if (!isOpen()) {
+        if ( serialPort.isOpen() ) {
+            if ( !serialPort.portNameMatches(portName) ) {
+                logger.warn("Existing serial port id '" + serialPort.getPortName() + "' does not match pattern '" + portName + "'.");
+                close();
+            }
+        } else {
             open(portName);
         }
 
         return execute(cmd, explicitReqId);
-    }
-
-
-    public synchronized boolean isOpen() {
-
-        return bPortOpen;
     }
 
 
@@ -101,13 +93,10 @@ public class ArduinoSerialBus {
     }
 
 
-    public void setCommPortName(String portName) {
-
-        this.commPortName = portName;
+    public String getPortName() {
+        return serialPort.getPortName();
     }
 
-
-    static short requestId = 0;
 
     protected synchronized String execute(String command, Integer explicitReqId ) throws ArduinoException {
 
@@ -221,6 +210,12 @@ public class ArduinoSerialBus {
                             try {
                                 int id = Integer.parseInt(tokens[1]);
                                 if ( id != reqId ) {
+                                    if ( reqId > id ) {
+                                        // try advancing one response to sync up response id
+                                        logger.info("Request ID of sent message is " + reqId + " but response header contained " + id);
+                                        logger.info("Trying to read next response from input stream (may block if no more responses)");
+                                        return extractResponse(respReader,reqId);
+                                    }
                                     throw new ArduinoException("Request ID mismatch in #BEGIN#.  Expected: " + reqId + " Found: " + id, 99);
                                 }
                             } catch (Exception ex) {
@@ -275,40 +270,11 @@ public class ArduinoSerialBus {
     }
 
 
-    private CommPortIdentifier findPortId(String commPortName) throws Exception {
+    private void open(String commPortNamePattern) throws Exception {
 
-        Enumeration portList = CommPortIdentifier.getPortIdentifiers();
-        while (portList.hasMoreElements()) {
-            CommPortIdentifier id = (CommPortIdentifier) portList.nextElement();
-            if (id.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-                if (id.getName().matches(commPortName)) {
-                    this.commPortName = id.getName();
-                    logger.info("Found serial port matching '" + commPortName + "': '" + id.getName() + "'");
-                    portId = id;
-                    return portId;
-                }
-            }
-        }
-        throw new ArduinoException("No serial port matched regex: '" + commPortName + "'", -1);
-    }
-
-
-    private void open(String commPortName) throws Exception {
-
-        final int baudRate = config.getBaudRate();
-        findPortId(commPortName);
-        SerialPort port = (SerialPort) portId.open("java-arduino", 2000);
-        port.setSerialPortParams(baudRate,
-                SerialPort.DATABITS_8,
-                SerialPort.STOPBITS_1,
-                SerialPort.PARITY_ODD);
-                //SerialPort.PARITY_NONE);
-        serialPort = port;
-        serialPort.notifyOnDataAvailable(true);
-        serialPort.notifyOnOutputEmpty(true);
-        Thread.sleep(2000);
-        bPortOpen = true;
-        logger.info("USB port opened for '" + this.commPortName + "'. Baud rate: " + baudRate);
+        serialPort.baudRate = config.getBaudRate();
+        serialPort.open(commPortNamePattern);
+        logger.info("USB port opened for '" + serialPort.getPortName() + "'. Baud rate: " + serialPort.baudRate);
     }
 
 

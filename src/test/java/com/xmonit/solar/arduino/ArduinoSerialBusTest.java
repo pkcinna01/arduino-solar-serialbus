@@ -24,7 +24,7 @@ public class ArduinoSerialBusTest {
     public void initAll() {
 
         serialBus = new ArduinoSerialBus( new TestConfigArduino(), new PrintResponseHandler());
-        serialBus.commPortName = "ttyACM999";
+        //serialBus.commPortName = "ttyACM999";
     }
 
 }
