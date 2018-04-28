@@ -27,15 +27,20 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
         }
     }
 
+
     @Override
     public InputStream getInputStream() throws IOException {
+
         return jscSerialPort.getInputStream();
     }
 
+
     @Override
     public OutputStream getOutputStream() throws IOException {
+
         return jscSerialPort.getOutputStream();
     }
+
 
     @Override
     public synchronized void open(String portNamePattern) throws ArduinoException {
@@ -43,10 +48,11 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
         try {
             jscSerialPort = findPort(portNamePattern);
             jscSerialPort.setComPortParameters(baudRate,dataBits,stopBits,parity);
-            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,4000,4000);
+            //jscSerialPort.addDataListener(this); // only use in async mode or some data will got to listener
+            //jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,3000,0);
+            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,1000,0);
             jscSerialPort.openPort();
-            //jscSerialPort.addDataListener(this);
-            //Thread.sleep(3000);
+            //Thread.sleep(5000);
         } catch ( Exception ex ) {
             jscSerialPort = null;
             throw new ArduinoException("Failed opening comm port for " + portNamePattern, ex);
@@ -81,8 +87,18 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
 
     @Override
     public void serialEvent(SerialPortEvent event) {
-        logger.info("Received jSerialComm port event: " + event.toString());
-//            //jscSerialPort.notifyOnDataAvailable(true);
-//            //jscSerialPort.notifyOnOutputEmpty(true);
+        switch(event.getEventType()){
+
+            case LISTENING_EVENT_DATA_AVAILABLE:
+                //logger.debug("LISTENING_EVENT_DATA_AVAILABLE");
+                break;
+            case LISTENING_EVENT_DATA_RECEIVED:
+                //logger.debug("LISTENING_EVENT_DATA_RECEIVED");
+                break;
+            case LISTENING_EVENT_DATA_WRITTEN:
+                //logger.debug("LISTENING_EVENT_DATA_WRITTEN");
+                break;
+        }
+        //logger.info("Received: " + new String(event.getReceivedData()));
     }
 }
