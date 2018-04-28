@@ -14,9 +14,6 @@ import java.util.List;
 
 public class ArduinoSerialBus {
 
-    public static final Integer NO_VALIDATION_REQ_ID = -1;
-    public static final Integer AUTO_GENERATE_REQ_ID = null;
-
     protected static short requestId = 0;
 
     private static final Logger logger = LoggerFactory.getLogger(ArduinoSerialBus.class);
@@ -104,15 +101,26 @@ public class ArduinoSerialBus {
         logger.debug(command);
 
         try {
-            int reqId = explicitReqId != null ? explicitReqId : ++requestId;
+
+            int reqId;
+            if ( explicitReqId != null ) {
+                if ( explicitReqId > 0x7FFF ) {
+                    throw new ArduinoException("Request ID exceeeds maximum size: " + explicitReqId, -1);
+                }
+                reqId = explicitReqId;
+            } else {
+                if ( ++requestId > 0x7FFF ) {
+                    requestId = 0;
+                }
+                reqId = requestId;
+            }
+
             OutputStream outputStream = serialPort.getOutputStream();
             String data = command + "|" + reqId;
             serialPort.send(data);
 
-            /* this approach doesn't work well with jSerialComm
-            InputStream inputStream = serialPort.getInputStream();
-            */
-            String strResp = serialPort.readUntilLine("^#END[:0-9]*#$",5000);
+            //InputStream inputStream = serialPort.getInputStream();
+            String strResp = serialPort.readUntilLine("^#END:"+reqId+":[:0-9]*#$",5000);
             InputStream inputStream = new ByteArrayInputStream(strResp.getBytes());
 
             return extractResponse(inputStream,reqId);
@@ -127,23 +135,31 @@ public class ArduinoSerialBus {
     }
 
 
-    private String extractResponse(InputStream respInputStream, int reqId) throws Exception {
+    /**
+     * Workaround to buffered reader behaving differently between different serial port implementations
+     * @param inputStream
+     * @return one line from arduino USB response
+     */
+    private String readLine(InputStream inputStream) throws IOException {
 
-        return extractResponse(new InputStreamReader(respInputStream), reqId);
+        StringBuilder sb = new StringBuilder();
+        int c;
+        while ( (c=inputStream.read()) != -1 ) {
+            if (c == 0 || c == '\r') {
+                continue;
+            }
+            if (c == '\n') {
+                break;
+            }
+            sb.append((char)c);
+        }
+        //logger.debug(sb.toString());
+        return sb.toString();
     }
 
-
-    private String extractResponse(Reader respReader, int reqId) throws Exception {
+    private String extractResponse(InputStream respInputStream, int reqId) throws Exception {
 
         try {
-
-            BufferedReader reader;
-
-            if (respReader instanceof BufferedReader) {
-                reader = (BufferedReader) respReader;
-            } else {
-                reader = new BufferedReader(respReader);
-            }
 
             String line;
             StringBuilder sb = new StringBuilder();
@@ -152,7 +168,7 @@ public class ArduinoSerialBus {
             boolean bFoundEnd = false;
             boolean advancedToNextPound = false;
 
-            while ((line = reader.readLine()) != null) {
+            while ((line = readLine(respInputStream)) != null) {
                 if (advancedToNextPound) {
                     advancedToNextPound = false;
                     line = '#' + line;
@@ -165,7 +181,7 @@ public class ArduinoSerialBus {
                     if ( tokens.length != 4 ) {
                         strErrMsg = "Invalid #END# footer. Expected '#END:{req id}:{resp length}:{checksum}#'. Found: "
                         + line;
-                    } else if ( reqId != NO_VALIDATION_REQ_ID ) {
+                    } else {
                         int id = Integer.parseInt(tokens[1]);
                         if ( id != reqId ) {
                             strErrMsg = "Request #" + reqId + " response footer request ID does not match: " + id;
@@ -188,9 +204,9 @@ public class ArduinoSerialBus {
                         throw new ArduinoException(strErrMsg, 97);
                     }
                     break;
-                } else if (line.matches(".*#BEGIN[:0-9]*#")) {
+                } else if (line.matches(".*#BEGIN:"+reqId+"#")) {
                     if (sb.length() > 0) {
-                        logger.warn("Found another #BEGIN#.  Ignoring buffered data: " + sb.toString());
+                        logger.warn("Found another #BEGIN:" + reqId + "#.  Ignoring buffered data: " + sb.toString());
                         sb.setLength(0);
                     }
                     if (!line.matches("#BEGIN[:0-9]*#")) {
@@ -198,35 +214,16 @@ public class ArduinoSerialBus {
                         logger.warn("Ignoring unexpected data before #BEGIN#: '" + strIgnored + "'");
                         line = line.substring(strIgnored.length());
                     }
-                    String[] tokens = line.replace("#","").split("[:]+");
-                    if ( tokens.length != 2 ) {
-                        throw new ArduinoException("Invalid #BEGIN# header. Expected '#BEGIN:{req id}#'. Found: " + line, 98 );
-                    } else if ( reqId != NO_VALIDATION_REQ_ID ){
-                        try {
-                            int id = Integer.parseInt(tokens[1]);
-                            if ( id != reqId ) {
-                                if ( reqId > id ) {
-                                    // try advancing one response to sync up response id
-                                    logger.info("Request ID of sent message is " + reqId + " but response header contained " + id);
-                                    logger.info("Trying to read next response from input stream (may block if no more responses)");
-                                    return extractResponse(respReader,reqId);
-                                }
-                                throw new ArduinoException("Request ID mismatch in #BEGIN#.  Expected: " + reqId + " Found: " + id, 99);
-                            }
-                        } catch (Exception ex) {
-                            throw new ArduinoException("Failed extracting request id from #BEGIN# header: " + line, ex );
-                        }
-                    }
                     bRespStarted = true;
                 } else if (bRespStarted) {
                     sb.append(line).append("\n");
                 } else {
                     if (!line.trim().isEmpty()) {
-                        logger.warn("Unexpected input before #BEGIN# marker.");
+                        logger.warn("Unexpected input before #BEGIN:" + reqId + "#");
                         StringBuilder ignoredText = new StringBuilder(line);
                         ignoredText.append('\n');
                         int ch;
-                        while ( (ch=reader.read()) != -1 ) {
+                        while ( (ch=respInputStream.read()) != -1 ) {
                             if (ch == '#') {
                                 advancedToNextPound = true;
                                 break;
@@ -235,7 +232,7 @@ public class ArduinoSerialBus {
                                 ignoredText.append((char) ch);
                             }
                         };
-                        logger.warn("Skipping USB data: " + ignoredText.toString());
+                        logger.warn("Skipping USB data: [" + ignoredText.toString() + "]");
                     }
                 }
             }
