@@ -65,7 +65,7 @@ public class ArduinoSerialBus {
             portName = config.getCommPortRegEx();
         }
 
-        if ( serialPort.isOpen() ) {
+        if ( isOpen() ) {
             if ( !serialPort.portNameMatches(portName) ) {
                 logger.warn("Existing serial port id '" + serialPort.getPortName() + "' does not match pattern '" + portName + "'.");
                 close();
@@ -75,6 +75,11 @@ public class ArduinoSerialBus {
         }
 
         return execute(cmd, explicitReqId);
+    }
+
+
+    public boolean isOpen() {
+        return serialPort.isOpen();
     }
 
 

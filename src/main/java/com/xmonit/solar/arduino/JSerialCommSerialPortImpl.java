@@ -25,6 +25,7 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
         if ( jscSerialPort != null ) {
             jscSerialPort.closePort();
         }
+        jscSerialPort = null;
     }
 
 
@@ -48,11 +49,14 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
         try {
             jscSerialPort = findPort(portNamePattern);
             jscSerialPort.setComPortParameters(baudRate,dataBits,stopBits,parity);
-            //jscSerialPort.addDataListener(this); // only use in async mode or some data will got to listener
+            //jscSerialPort.addDataListener(this); // only use in async mode or some data will go to listener
             //jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,3000,0);
-            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,1000,0);
-            jscSerialPort.openPort();
-            //Thread.sleep(5000);
+            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,2000,0);
+            boolean opened = jscSerialPort.openPort();
+            if ( !opened ) {
+                throw new Exception("Failed opening Arduino port for " + jscSerialPort.getSystemPortName() );
+            }
+            Thread.sleep(500);
         } catch ( Exception ex ) {
             jscSerialPort = null;
             throw new ArduinoException("Failed opening comm port for " + portNamePattern, ex);
