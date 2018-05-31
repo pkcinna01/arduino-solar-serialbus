@@ -82,8 +82,8 @@ public abstract class ArduinoSerialPort {
                     throw new IOException("Exceeded max buffer size (" + maxLen + ") while reading arduino response");
                 }
                 if (System.currentTimeMillis() - startMs > timeoutMs) {
+                    logger.info("Timed out. Abandoning data: " + sb.toString());
                     throw new IOException("Timed out waiting for arduino input matching '" + lineRegEx + "' (exceeded " + timeoutMs + " ms)");
-
                 }
 
                 int c = inputStream.read();

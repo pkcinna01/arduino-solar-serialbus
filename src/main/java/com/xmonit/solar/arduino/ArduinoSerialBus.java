@@ -103,8 +103,6 @@ public class ArduinoSerialBus {
 
     protected synchronized String execute(String command, Integer explicitReqId ) throws ArduinoException {
 
-        logger.debug(command);
-
         try {
 
             int reqId;
@@ -121,11 +119,14 @@ public class ArduinoSerialBus {
             }
 
             OutputStream outputStream = serialPort.getOutputStream();
-            String data = command + "|" + reqId;
+            String data = command + "|" + reqId + "\n";
+            if ( !command.startsWith("GET") ) {
+                logger.info(data);
+            }
             serialPort.send(data);
 
             //InputStream inputStream = serialPort.getInputStream();
-            String strResp = serialPort.readUntilLine("^#END:"+reqId+":[:0-9]*#$",5000);
+            String strResp = serialPort.readUntilLine("^#END:"+reqId+":[:0-9]*#$",10000);
             InputStream inputStream = new ByteArrayInputStream(strResp.getBytes());
 
             return extractResponse(inputStream,reqId);
