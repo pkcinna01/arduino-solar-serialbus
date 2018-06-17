@@ -112,8 +112,8 @@ public class ArduinoSerialBus {
                 }
                 reqId = explicitReqId;
             } else {
-                if ( ++requestId > 0x7FFF ) {
-                    requestId = 0;
+                if ( ++requestId < 0 ) { // >= 0x7FFF ) {
+                    requestId = 1;
                 }
                 reqId = requestId;
             }
