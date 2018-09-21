@@ -10,6 +10,10 @@ public class ArduinoResponse implements Serializable {
     public Integer respCode;
     public String respMsg;
 
+    //TODO - remove these hacks
+    public String lastErrorMsg;
+    public String lastInfoMsg;
+
     public double getRespCodeAsDouble() {
         return respCode == null ? Double.NaN : respCode.doubleValue();
     }

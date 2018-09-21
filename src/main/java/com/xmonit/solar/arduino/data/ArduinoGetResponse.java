@@ -14,27 +14,31 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class ArduinoGetResponse extends ArduinoResponse implements Serializable {
 
-    public List<Device> devices = new ArrayList();
-    public Integer fanMode;
-    public String fanModeText;
-    public List<PowerMeter> powerMeters = new ArrayList();
+    public List<Sensor> sensors = new ArrayList();
+    //public List<Device> devices = new ArrayList();
+    //public Integer fanMode;
+    //public String fanModeText;
+    //public List<PowerMeter> powerMeters = new ArrayList();
 
 
-    public double getFanModeAsDouble() {
-        return fanMode == null ? Double.NaN : fanMode.doubleValue();
-    }
+    //public double getFanModeAsDouble() {
+    //    return fanMode == null ? Double.NaN : fanMode.doubleValue();
+    //}
 
 
     public void invalidate(Exception ex) {
 
-        fanMode = null;
-        fanModeText = null;
+        //fanMode = null;
+        //fanModeText = null;
 
-        for (PowerMeter m : powerMeters) {
-            m.invalidate();
-        }
-        for (Device d : devices) {
-            d.invalidate();
+        //for (PowerMeter m : powerMeters) {
+        //    m.invalidate();
+        //}
+        //for (Device d : devices) {
+        //    d.invalidate();
+        //}
+        for (Sensor s : sensors) {
+            s.invalidate();
         }
         if (ex instanceof ArduinoException) {
             ArduinoException sex = (ArduinoException) ex;
@@ -56,27 +60,35 @@ public class ArduinoGetResponse extends ArduinoResponse implements Serializable 
      */
     public void copy(ArduinoGetResponse src) throws Exception {
 
-        setFanMode(src.getFanMode());
-        setFanModeText(src.getFanModeText());
+        //setFanMode(src.getFanMode());
+        //setFanModeText(src.getFanModeText());
         setRespCode(src.getRespCode());
         setRespMsg(src.getRespMsg());
 
         if (respCode == 0) {
-            if (src.powerMeters.size() != powerMeters.size()) {
-                throw new ArduinoException("Arduino power meter count changed from "
-                        + src.powerMeters.size() + " to " + powerMeters.size() + " (unsupported). ", -1);
-            } else if (src.devices.size() != devices.size()) {
-                throw new ArduinoException("Arduino device count changed from "
-                        + src.devices.size() + " to " + devices.size() + " (unsupported). ", -1);
+            //if (src.powerMeters.size() != powerMeters.size()) {
+            //    throw new ArduinoException("Arduino power meter count changed from "
+            //            + src.powerMeters.size() + " to " + powerMeters.size() + " (unsupported). ", -1);
+            //} else
+            //if (src.devices.size() != devices.size()) {
+            //    throw new ArduinoException("Arduino device count changed from "
+            //            + src.devices.size() + " to " + devices.size() + " (unsupported). ", -1);
+            //}
+            if (src.sensors.size() != sensors.size()) {
+                throw new ArduinoException("Arduino sensor count changed from "
+                        + src.sensors.size() + " to " + sensors.size() + " (unsupported). ", -1);
             }
         }
 
-        for (int i = 0; i < powerMeters.size(); i++) {
-            powerMeters.get(i).copy(src.powerMeters.get(i));
-        }
+        //for (int i = 0; i < powerMeters.size(); i++) {
+        //    powerMeters.get(i).copy(src.powerMeters.get(i));
+        //}
 
-        for (int i = 0; i < devices.size(); i++) {
-            devices.get(i).copy(src.devices.get(i));
+        //for (int i = 0; i < devices.size(); i++) {
+        //    devices.get(i).copy(src.devices.get(i));
+        //}
+        for (int i = 0; i < sensors.size(); i++) {
+            sensors.get(i).copy(src.sensors.get(i));
         }
     }
 

@@ -56,6 +56,10 @@ public class ArduinoSerialBus {
 
 
     public synchronized String execute(String cmd, String portName, Integer explicitReqId) throws Exception {
+        return execute(cmd,portName,explicitReqId,true);
+    }
+
+    public synchronized String execute(String cmd, String portName, Integer explicitReqId, boolean validate) throws Exception {
 
         if (cmd == null || cmd.trim().isEmpty()) {
             cmd = config.getCmd();
@@ -74,7 +78,7 @@ public class ArduinoSerialBus {
             open(portName);
         }
 
-        return execute(cmd, explicitReqId);
+        return execute(cmd, explicitReqId, validate);
     }
 
 
@@ -101,7 +105,7 @@ public class ArduinoSerialBus {
     }
 
 
-    protected synchronized String execute(String command, Integer explicitReqId ) throws ArduinoException {
+    protected synchronized String execute(String command, Integer explicitReqId, boolean validate ) throws ArduinoException {
 
         try {
 
@@ -126,10 +130,10 @@ public class ArduinoSerialBus {
             serialPort.send(data);
 
             //InputStream inputStream = serialPort.getInputStream();
-            String strResp = serialPort.readUntilLine("^#END:"+reqId+":[:0-9]*#$",10000);
+            String strResp = serialPort.readUntilLine("^#END:"+reqId+":[:0-9]*#$",30000);
             InputStream inputStream = new ByteArrayInputStream(strResp.getBytes());
 
-            return extractResponse(inputStream,reqId);
+            return extractResponse(inputStream,reqId,validate);
         } catch (ArduinoException ex) {
             logger.error("ArduinoSerialBus.execute('" + command + "') failed.");
             close();
@@ -143,6 +147,8 @@ public class ArduinoSerialBus {
 
     /**
      * Workaround to buffered reader behaving differently between different serial port implementations
+     * and arduino board types
+     *
      * @param inputStream
      * @return one line from arduino USB response
      */
@@ -154,32 +160,36 @@ public class ArduinoSerialBus {
             if (c == 0 || c == '\r') {
                 continue;
             }
+            sb.append((char)c);
             if (c == '\n') {
+                if ( sb.length() == 0 ) {
+                    logger.warn("empty input from arduino");
+                }
                 break;
             }
-            sb.append((char)c);
         }
         //logger.debug(sb.toString());
         return sb.toString();
     }
 
-    private String extractResponse(InputStream respInputStream, int reqId) throws Exception {
+    private String extractResponse(InputStream respInputStream, int reqId, boolean validate) throws Exception {
 
         try {
 
-            String line;
-            StringBuilder sb = new StringBuilder();
             String resp = "";
+            StringBuilder sb = new StringBuilder();
             boolean bRespStarted = false;
             boolean bFoundEnd = false;
             boolean advancedToNextPound = false;
 
-            while ((line = readLine(respInputStream)) != null) {
+            while (true) {
+                String line = readLine(respInputStream);
+
                 if (advancedToNextPound) {
                     advancedToNextPound = false;
                     line = '#' + line;
                 }
-                if (line.matches("#END[:0-9]*#")) {
+                if (line.matches("#END[:0-9]*#\n?")) {
                     resp = sb.toString();
                     bFoundEnd = true;
                     String[] tokens = line.replace("#","").split(":");
@@ -207,27 +217,34 @@ public class ArduinoSerialBus {
                         }
                     }
                     if ( strErrMsg != null ) {
-                        throw new ArduinoException(strErrMsg, 97);
+                        if ( validate ) {
+                            throw new ArduinoException(strErrMsg, 97);
+                        } else {
+                            logger.warn("Ignoring validation error: '" + strErrMsg + "'");
+                        }
                     }
                     break;
-                } else if (line.matches(".*#BEGIN:"+reqId+"#")) {
+                } else if (line.matches(".*#BEGIN:"+reqId+"#\n?")) {
                     if (sb.length() > 0) {
                         logger.warn("Found another #BEGIN:" + reqId + "#.  Ignoring buffered data: " + sb.toString());
                         sb.setLength(0);
                     }
-                    if (!line.matches("#BEGIN[:0-9]*#")) {
+                    if (!line.matches("#BEGIN[:0-9]*#\n?")) {
                         String strIgnored = line.replaceAll("#BEGIN[:0-9]*#","");
                         logger.warn("Ignoring unexpected data before #BEGIN#: '" + strIgnored + "'");
                         line = line.substring(strIgnored.length());
                     }
                     bRespStarted = true;
                 } else if (bRespStarted) {
-                    sb.append(line).append("\n");
+                    if ( line.matches("^[\n]$")){
+                        //logger.warn("Ignoring serial response data because all newlines... this is hack for mega 2560 quirk");
+                    } else {
+                        sb.append(line);
+                    }
                 } else {
                     if (!line.trim().isEmpty()) {
                         logger.warn("Unexpected input before #BEGIN:" + reqId + "#");
                         StringBuilder ignoredText = new StringBuilder(line);
-                        ignoredText.append('\n');
                         int ch;
                         while ( (ch=respInputStream.read()) != -1 ) {
                             if (ch == '#') {
