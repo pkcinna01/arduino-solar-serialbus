@@ -3,8 +3,6 @@ package com.xmonit.solar.arduino;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,8 +13,6 @@ import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_DATA_RECEIVED;
 import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_DATA_WRITTEN;
 
 public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements SerialPortDataListener {
-
-    private static final Logger logger = LoggerFactory.getLogger(JSerialCommSerialPortImpl.class);
 
     protected SerialPort jscSerialPort;
 
@@ -51,7 +47,7 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
             jscSerialPort.setComPortParameters(baudRate,dataBits,stopBits,parity);
             //jscSerialPort.addDataListener(this); // only use in async mode or some data will go to listener
             //jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,3000,0);
-            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,2000,0);
+            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING,500,0);
             boolean opened = jscSerialPort.openPort();
             if ( !opened ) {
                 throw new Exception("Failed opening Arduino port for " + jscSerialPort.getSystemPortName() );

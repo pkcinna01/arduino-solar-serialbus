@@ -1,47 +1,46 @@
 package com.xmonit.solar.arduino;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.Collections;
-
-import java.util.LinkedList;
-import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 public class ArduinoSerialBus {
 
-    protected static short requestId = 0;
-
     private static final Logger logger = LoggerFactory.getLogger(ArduinoSerialBus.class);
 
+    protected static short requestId = 0;
+
+    protected ArduinoConfig config;
+    private ObjectMapper mapper = new ObjectMapper();
+
+    protected LinkedList<ArduinoResponseHandler> responseHandlers = new LinkedList<>();
     public ArduinoSerialPort serialPort = new JSerialCommSerialPortImpl();
     //public ArduinoSerialPort serialPort = new PureJavaCommSerialPortImpl();
 
-    protected ArduinoConfig config;
-    protected LinkedList<ArduinoResponseProcessor> responseProcessors = new LinkedList();
 
-    private boolean bPortOpen = false;
-    private ObjectMapper mapper = new ObjectMapper();
-
-
-    public ArduinoSerialBus(ArduinoConfig config, List<ArduinoResponseProcessor> rpList) {
-        this.config = config;
-        responseProcessors.addAll(rpList);
+    public ArduinoSerialBus(ArduinoConfig config, ArduinoResponseHandler rp) {
+        this(config, Collections.singletonList(rp));
     }
 
 
-    public ArduinoSerialBus(ArduinoConfig config, ArduinoResponseProcessor rp) {
-        this(config, Collections.singletonList(rp));
+    public ArduinoSerialBus(ArduinoConfig config, List<ArduinoResponseHandler> rpList) {
+        this.config = config;
+        responseHandlers.addAll(rpList);
     }
 
 
     public synchronized void close() {
 
-        bPortOpen = false;
         if (serialPort != null) {
             try {
                 serialPort.close();
@@ -55,11 +54,52 @@ public class ArduinoSerialBus {
     }
 
 
+    public String execute(String cmd) throws ArduinoException {
+        return execute(cmd, null, null,true);
+    }
+
+    protected synchronized String execute(String command, Integer explicitReqId, boolean validate ) throws ArduinoException {
+
+        try {
+
+            int reqId;
+            if ( explicitReqId != null ) {
+                if ( explicitReqId > 0x7FFF ) {
+                    throw new ArduinoException("Request ID exceeeds maximum size: " + explicitReqId, -1);
+                }
+                reqId = explicitReqId;
+            } else {
+                if ( ++requestId < 0 ) { // >= 0x7FFF ) {
+                    requestId = 1;
+                }
+                reqId = requestId;
+            }
+
+            String data = command + "|" + reqId + "\n";
+            if ( !command.startsWith("GET") ) {
+                logger.info(data);
+            }
+            serialPort.send(data);
+
+            String strResp = serialPort.readUntilLine("^#END:"+reqId+":[:0-9]*#$",30000);
+            InputStream inputStream = new ByteArrayInputStream(strResp.getBytes());
+
+            return extractResponse(inputStream,reqId,validate);
+        } catch (ArduinoException ex) {
+            logger.error("ArduinoSerialBus.execute('" + command + "') failed.");
+            close();
+            throw ex;
+        } catch (Exception ex) {
+            close();
+            throw new ArduinoException("ArduinoSerialBus.execute('" + command + "') failed.", ex);
+        }
+    }
+
     public synchronized String execute(String cmd, String portName, Integer explicitReqId) throws Exception {
         return execute(cmd,portName,explicitReqId,true);
     }
 
-    public synchronized String execute(String cmd, String portName, Integer explicitReqId, boolean validate) throws Exception {
+    public synchronized String execute(String cmd, String portName, Integer explicitReqId, boolean validate) throws ArduinoException {
 
         if (cmd == null || cmd.trim().isEmpty()) {
             cmd = config.getCmd();
@@ -82,101 +122,11 @@ public class ArduinoSerialBus {
     }
 
 
-    public boolean isOpen() {
-        return serialPort.isOpen();
-    }
-
-
-    public void processResponse(String strResp) throws Exception {
-        JsonNode respNode = mapper.readTree(strResp);
-        processResponse(respNode);
-    }
-
-
-    public void processResponse(JsonNode respNode) throws Exception {
-        for (ArduinoResponseProcessor p : responseProcessors) {
-            p.process(this,respNode);
-        }
-    }
-
-
-    public String getPortName() {
-        return serialPort.getPortName();
-    }
-
-
-    protected synchronized String execute(String command, Integer explicitReqId, boolean validate ) throws ArduinoException {
-
-        try {
-
-            int reqId;
-            if ( explicitReqId != null ) {
-                if ( explicitReqId > 0x7FFF ) {
-                    throw new ArduinoException("Request ID exceeeds maximum size: " + explicitReqId, -1);
-                }
-                reqId = explicitReqId;
-            } else {
-                if ( ++requestId < 0 ) { // >= 0x7FFF ) {
-                    requestId = 1;
-                }
-                reqId = requestId;
-            }
-
-            OutputStream outputStream = serialPort.getOutputStream();
-            String data = command + "|" + reqId + "\n";
-            if ( !command.startsWith("GET") ) {
-                logger.info(data);
-            }
-            serialPort.send(data);
-
-            //InputStream inputStream = serialPort.getInputStream();
-            String strResp = serialPort.readUntilLine("^#END:"+reqId+":[:0-9]*#$",30000);
-            InputStream inputStream = new ByteArrayInputStream(strResp.getBytes());
-
-            return extractResponse(inputStream,reqId,validate);
-        } catch (ArduinoException ex) {
-            logger.error("ArduinoSerialBus.execute('" + command + "') failed.");
-            close();
-            throw ex;
-        } catch (Exception ex) {
-            close();
-            throw new ArduinoException("ArduinoSerialBus.execute('" + command + "') failed.", ex);
-        }
-    }
-
-
-    /**
-     * Workaround to buffered reader behaving differently between different serial port implementations
-     * and arduino board types
-     *
-     * @param inputStream
-     * @return one line from arduino USB response
-     */
-    private String readLine(InputStream inputStream) throws IOException {
-
-        StringBuilder sb = new StringBuilder();
-        int c;
-        while ( (c=inputStream.read()) != -1 ) {
-            if (c == 0 || c == '\r') {
-                continue;
-            }
-            sb.append((char)c);
-            if (c == '\n') {
-                if ( sb.length() == 0 ) {
-                    logger.warn("empty input from arduino");
-                }
-                break;
-            }
-        }
-        //logger.debug(sb.toString());
-        return sb.toString();
-    }
-
     private String extractResponse(InputStream respInputStream, int reqId, boolean validate) throws Exception {
 
+        String resp = "";
         try {
 
-            String resp = "";
             StringBuilder sb = new StringBuilder();
             boolean bRespStarted = false;
             boolean bFoundEnd = false;
@@ -190,6 +140,8 @@ public class ArduinoSerialBus {
                     line = '#' + line;
                 }
                 if (line.matches("#END[:0-9]*#\n?")) {
+                    logger.debug("Found #END in line: " + line);
+
                     resp = sb.toString();
                     bFoundEnd = true;
                     String[] tokens = line.replace("#","").split(":");
@@ -225,6 +177,7 @@ public class ArduinoSerialBus {
                     }
                     break;
                 } else if (line.matches(".*#BEGIN:"+reqId+"#\n?")) {
+                    logger.debug("Found #BEGIN in line: " + line);
                     if (sb.length() > 0) {
                         logger.warn("Found another #BEGIN:" + reqId + "#.  Ignoring buffered data: " + sb.toString());
                         sb.setLength(0);
@@ -265,19 +218,71 @@ public class ArduinoSerialBus {
             }
             return resp;
         } catch (ArduinoException ex) {
+            logger.error(resp);
             throw ex;
         } catch (Exception ex) {
+            logger.error(resp);
             String msg = "Failed reading or parsing data from Arduino";
             throw new ArduinoException(msg, ex);
         }
     }
 
 
-    private void open(String commPortNamePattern) throws Exception {
+    public String getPortName() {
+        return serialPort.getPortName();
+    }
+
+
+    public boolean isOpen() {
+        return serialPort.isOpen();
+    }
+
+
+    private void open(String commPortNamePattern) throws ArduinoException {
 
         serialPort.baudRate = config.getBaudRate();
         serialPort.open(commPortNamePattern);
         logger.info("USB port opened for '" + serialPort.getPortName() + "'. Baud rate: " + serialPort.baudRate);
+    }
+
+
+    public void processResponse(JsonNode respNode) throws Exception {
+        for (ArduinoResponseHandler p : responseHandlers) {
+            p.process(this,respNode);
+        }
+    }
+
+    public void processResponse(String strResp) throws Exception {
+        JsonNode respNode = mapper.readTree(strResp);
+        processResponse(respNode);
+    }
+
+
+    /**
+     * Workaround to buffered reader behaving differently between different serial port implementations
+     * and arduino board types
+     *
+     * @param inputStream
+     * @return one line from arduino USB response
+     */
+    private String readLine(InputStream inputStream) throws IOException {
+
+        StringBuilder sb = new StringBuilder();
+        int c;
+        while ( (c=inputStream.read()) != -1 ) {
+            if (c == 0 || c == '\r') {
+                continue;
+            }
+            sb.append((char)c);
+            if (c == '\n') {
+                if ( sb.length() == 0 ) {
+                    logger.warn("empty input from arduino");
+                }
+                break;
+            }
+        }
+        //logger.debug(sb.toString());
+        return sb.toString();
     }
 
 

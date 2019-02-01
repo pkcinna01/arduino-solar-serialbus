@@ -2,23 +2,17 @@ package com.xmonit.solar.arduino.data;
 
 import lombok.Data;
 
+
 @Data
 public class Status {
-    public String msg = "";
-    public Integer code = 0;
 
-    public void copy(Status src) throws Exception {
+    public Integer code;
+    public String msg;
 
-        if (src == null) {
-            invalidate();
-        } else {
-            msg = src.msg;
-            code = src.code;
-        }
-    }
+    public Status() {}
 
-    public void invalidate() {
-        msg = null;
-        code = null;
+    public Status(Integer code, String msg) {
+        this.code = code;
+        this.msg = msg;
     }
 }

@@ -1,11 +1,12 @@
 package com.xmonit.solar.arduino;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.PrintWriter;
 
-public class PrintResponseHandler implements ArduinoResponseProcessor {
+public class PrintResponseHandler implements ArduinoResponseHandler {
 
     PrintWriter pw;
 

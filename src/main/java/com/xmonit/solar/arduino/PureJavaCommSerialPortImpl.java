@@ -47,7 +47,7 @@ public class PureJavaCommSerialPortImpl extends ArduinoSerialPort {
             pjcSerialPort.notifyOnDataAvailable(true);
             pjcSerialPort.notifyOnOutputEmpty(true);
             isOpen = true;
-            Thread.sleep(2000);
+            //Thread.sleep(200);
         } catch ( Exception ex ) {
             throw new ArduinoException("Failed opening comm port for " + portNamePattern, ex);
         }
@@ -66,7 +66,7 @@ public class PureJavaCommSerialPortImpl extends ArduinoSerialPort {
 
     private CommPortIdentifier findPortId(String commPortName) throws Exception {
 
-        Enumeration portList = CommPortIdentifier.getPortIdentifiers();
+        Enumeration<CommPortIdentifier> portList = CommPortIdentifier.getPortIdentifiers();
         while (portList.hasMoreElements()) {
             CommPortIdentifier id = (CommPortIdentifier) portList.nextElement();
             if (id.getPortType() == CommPortIdentifier.PORT_SERIAL) {
