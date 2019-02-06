@@ -35,5 +35,9 @@ public class DeviceDaoTest extends DaoTestBase<DeviceDao, Device> {
         super.doGetTest();
     }
 
+    @org.junit.Test
+    public void doFindWhereIdInTest() throws ArduinoException {
+        super.doFindWhereIdInTest();
+    }
 
 }

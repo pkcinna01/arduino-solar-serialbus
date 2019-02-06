@@ -34,5 +34,9 @@ public class CapabilityDaoTest extends DaoTestBase<CapabilityDao, Constraint> {
         super.doGetTest();
     }
 
+    @org.junit.Test
+    public void doFindWhereIdInTest() throws ArduinoException {
+        super.doFindWhereIdInTest();
+    }
 
 }

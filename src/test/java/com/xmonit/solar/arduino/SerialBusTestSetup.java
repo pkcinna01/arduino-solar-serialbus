@@ -9,7 +9,7 @@ public class SerialBusTestSetup {
 
     @Before
     public void setUp() throws Exception {
-        serialBus = new ArduinoSerialBus( new TestConfigArduino(), new PrintResponseHandler());
+        serialBus = new ArduinoSerialBus( new TestConfigArduino());
     }
 
     @After

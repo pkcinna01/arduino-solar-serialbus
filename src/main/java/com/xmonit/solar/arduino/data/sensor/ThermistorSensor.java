@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ThermistorSensor extends ArduinoSensor {
 
-	Double beta, balanceResistance, roomTempResistance;
+	public Double beta, balanceResistance, roomTempResistance;
 
 	public ThermistorSensor() {
 	}

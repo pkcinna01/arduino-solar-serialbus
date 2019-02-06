@@ -9,7 +9,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class VoltageSensor extends ArduinoSensor {
 
-	public Double vcc, r1, r2;
+	public Double vcc, r1, r2, maxVccAgeMs;
+
 
 	public VoltageSensor() {
 	}

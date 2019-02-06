@@ -9,9 +9,13 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class CurrentSensor extends ArduinoSensor {
 
-	public String channel, gain;
-	public Double shuntADC, ratedResistance;
-	public Integer millivoltIncrement, ratedAmps, ratedMilliVolts;
+	public enum Channel { CHANNEL_A0, CHANNEL_A1, CHANNEL_A2, CHANNEL_A3, DIFFERENTIAL_0_1, DIFFERENTIAL_2_3 };
+	public enum Gain { GAIN_ONE, GAIN_TWO, GAIN_FOUR, GAIN_EIGHT, GAIN_SIXTEEN, GAIN_TWOTHIRDS };
+
+	public Gain gain;
+	public Channel channel;
+	public Double shuntADC, ratedOhms;
+	public Integer millivoltIncrement, ratedAmps, ratedMillivolts;
 
 	public CurrentSensor() {
 	}

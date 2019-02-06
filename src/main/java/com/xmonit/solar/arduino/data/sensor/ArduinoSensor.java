@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ArduinoSensor extends Sensor {
 
-	Integer sensorPin, sampleCnt, sampleIntervalMs;
+	public Integer sensorPin, sampleCnt, sampleIntervalMs;
 
 	public ArduinoSensor() {
 	}

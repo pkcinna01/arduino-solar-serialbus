@@ -1,17 +1,12 @@
 package com.xmonit.solar.arduino;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 
 public class ArduinoSerialBus {
@@ -23,19 +18,12 @@ public class ArduinoSerialBus {
     protected ArduinoConfig config;
     private ObjectMapper mapper = new ObjectMapper();
 
-    protected LinkedList<ArduinoResponseHandler> responseHandlers = new LinkedList<>();
     public ArduinoSerialPort serialPort = new JSerialCommSerialPortImpl();
     //public ArduinoSerialPort serialPort = new PureJavaCommSerialPortImpl();
 
 
-    public ArduinoSerialBus(ArduinoConfig config, ArduinoResponseHandler rp) {
-        this(config, Collections.singletonList(rp));
-    }
-
-
-    public ArduinoSerialBus(ArduinoConfig config, List<ArduinoResponseHandler> rpList) {
+    public ArduinoSerialBus(ArduinoConfig config) {
         this.config = config;
-        responseHandlers.addAll(rpList);
     }
 
 
@@ -243,18 +231,6 @@ public class ArduinoSerialBus {
         serialPort.baudRate = config.getBaudRate();
         serialPort.open(commPortNamePattern);
         logger.info("USB port opened for '" + serialPort.getPortName() + "'. Baud rate: " + serialPort.baudRate);
-    }
-
-
-    public void processResponse(JsonNode respNode) throws Exception {
-        for (ArduinoResponseHandler p : responseHandlers) {
-            p.process(this,respNode);
-        }
-    }
-
-    public void processResponse(String strResp) throws Exception {
-        JsonNode respNode = mapper.readTree(strResp);
-        processResponse(respNode);
     }
 
 

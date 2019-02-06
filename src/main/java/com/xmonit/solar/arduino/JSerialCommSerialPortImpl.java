@@ -47,7 +47,7 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
             jscSerialPort.setComPortParameters(baudRate,dataBits,stopBits,parity);
             //jscSerialPort.addDataListener(this); // only use in async mode or some data will go to listener
             //jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,3000,0);
-            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING,500,0);
+            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING,1000,0);
             boolean opened = jscSerialPort.openPort();
             if ( !opened ) {
                 throw new Exception("Failed opening Arduino port for " + jscSerialPort.getSystemPortName() );

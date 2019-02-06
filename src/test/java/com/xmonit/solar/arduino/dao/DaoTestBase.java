@@ -5,31 +5,28 @@ import com.xmonit.solar.arduino.SerialBusTestSetup;
 import com.xmonit.solar.arduino.data.DomainObject;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 public class DaoTestBase<DaoType extends Dao, DataT extends DomainObject> extends SerialBusTestSetup {
 
-    DaoType dao;
+    protected DaoType dao;
 
-    @org.junit.Test
     public void doListTest() throws ArduinoException {
-        DataT[] items = dao.list();
+        boolean bVerbose = false;
+        DataT[] items = dao.list(bVerbose);
         for (DataT item : items) {
             System.out.println(item);
         }
     }
 
-    @org.junit.Test
     public void doVerboseListTest() throws ArduinoException {
-        boolean bOldVerbose = dao.getVerbose();
-        dao.setVerbose(true);
-        DataT[] items = dao.list();
+        boolean bVerbose = true;
+        DataT[] items = dao.list(bVerbose);
         for (DataT item : items) {
             System.out.println(item);
         }
-        dao.setVerbose(bOldVerbose);
     }
 
-    @org.junit.Test
     public void doFilterTest() throws ArduinoException {
         DataT[] foundList = dao.findByTitleLike("*Switch*");
         DataT[] othersList = dao.findByTitleNotLike("*Switch*");
@@ -46,7 +43,6 @@ public class DaoTestBase<DaoType extends Dao, DataT extends DomainObject> extend
     }
 
 
-    @org.junit.Test
     public void doGetTest() throws ArduinoException {
         DataT item = dao.get(1);
         DataT[] list = dao.list();
@@ -62,5 +58,15 @@ public class DaoTestBase<DaoType extends Dao, DataT extends DomainObject> extend
         assertEquals( listItem.getTitle(), item.getTitle());
     }
 
+    public void doFindWhereIdInTest() throws ArduinoException {
+        int[] ids = { 1, 2 };
+        DataT[] items = dao.findWhereIdIn(ids);
+
+        assertEquals(ids.length, items.length);
+        for( int i = 0; i < ids.length; i++ ) {
+            assertTrue( items[i].id == ids[i]);
+            System.out.println(items[i]);
+        }
+    }
 
 }

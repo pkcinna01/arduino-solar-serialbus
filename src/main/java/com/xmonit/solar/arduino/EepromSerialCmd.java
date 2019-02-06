@@ -12,11 +12,11 @@ public class EepromSerialCmd extends SerialCmd {
         super(serialBus);
     }
 
-    public void doSetJsonFormatCompact( boolean bCompact ) throws ArduinoException {
-        rawExecute("eeprom,set,json_format," + (bCompact ? "COMPACT" : "PRETTY"));
+    public void setJsonFormatCompact( boolean bCompact ) throws ArduinoException {
+        execute("eeprom,set,json_format," + (bCompact ? "COMPACT" : "PRETTY"));
     }
 
-    public boolean doIsJsonFormatCompact() throws ArduinoException {
+    public boolean isJsonFormatCompact() throws ArduinoException {
         JsonNode jsonNode = execute("eeprom,get,json_format");
         String jsonFormat = new ResponseExtractor(jsonNode).extract(Eeprom.class, "eeprom").jsonFormat;
         return "COMPACT".equalsIgnoreCase(jsonFormat);
