@@ -1,7 +1,8 @@
-package com.xmonit.solar.arduino.dao;
+package com.xmonit.solar.arduino.dao.constraint;
 
 import com.xmonit.solar.arduino.ArduinoException;
 import com.xmonit.solar.arduino.ArduinoSerialBus;
+import com.xmonit.solar.arduino.dao.Dao;
 import com.xmonit.solar.arduino.data.constraint.Constraint;
 import org.apache.commons.lang3.StringUtils;
 
@@ -36,5 +37,28 @@ public class ConstraintDao extends Dao {
         return doCommand("get,constraints", "constraints", Constraint[].class, bVerbose);
     }
 
+    public class ConstraintFieldAccessor<ResultT> extends ObjectFieldAccessor<ResultT> {
+        public ConstraintFieldAccessor(int id, String fieldName, Class<ResultT> c) {
+            super(id, ObjectType.CONSTRAINT, fieldName, c);
+        }
+    }
+
+    public class PassedAccessor extends ConstraintFieldAccessor<Boolean> {
+        public PassedAccessor(int id) {
+            super(id, "passed", Boolean.class);
+        }
+    }
+    public PassedAccessor passed(int id) {
+        return new PassedAccessor(id);
+    }
+
+    public class ModeAccessor extends ConstraintFieldAccessor<Constraint.Mode> {
+        public ModeAccessor(int id) {
+            super(id, "mode", Constraint.Mode.class);
+        }
+    }
+    public ModeAccessor mode(int id) {
+        return new ModeAccessor(id);
+    }
 
 }

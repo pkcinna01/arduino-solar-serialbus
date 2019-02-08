@@ -39,20 +39,23 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
     }
 
 
+    static long lastOpenTimeMs = 0;
+
     @Override
     public synchronized void open(String portNamePattern) throws ArduinoException {
-
         try {
             jscSerialPort = findPort(portNamePattern);
             jscSerialPort.setComPortParameters(baudRate,dataBits,stopBits,parity);
             //jscSerialPort.addDataListener(this); // only use in async mode or some data will go to listener
             //jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,3000,0);
-            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING,1000,0);
+            jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING,500,0);
             boolean opened = jscSerialPort.openPort();
             if ( !opened ) {
                 throw new Exception("Failed opening Arduino port for " + jscSerialPort.getSystemPortName() );
             }
-            Thread.sleep(500);
+            long elapsedTimeSinceLastOpenMs = System.currentTimeMillis() - lastOpenTimeMs;
+            lastOpenTimeMs = System.currentTimeMillis();
+            Thread.sleep( elapsedTimeSinceLastOpenMs > 5*60*1000 ? 2000 : 250);
         } catch ( Exception ex ) {
             jscSerialPort = null;
             throw new ArduinoException("Failed opening comm port for " + portNamePattern, ex);

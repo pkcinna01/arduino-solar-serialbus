@@ -10,8 +10,8 @@ public class BooleanConstraint extends Constraint {
 
     public BooleanConstraint() {}
 
-    public BooleanConstraint(Integer id, String type, String title, String state) {
-        super(id, type, title,state);
+    public BooleanConstraint(Integer id, String type, String title, Boolean bPassed) {
+        super(id, type, title, bPassed);
     }
     
     @Override

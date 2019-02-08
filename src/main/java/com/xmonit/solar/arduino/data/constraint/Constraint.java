@@ -11,28 +11,26 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class Constraint extends DomainObject {
 
+    public enum Mode { FAIL, PASS, TEST, REMOTE, REMOTE_OR_FAIL, REMOTE_OR_PASS, REMOTE_OR_TEST };
+
     public String title;
-    public String state;
+    public Boolean passed;
     public Integer passDelayMs;
     public Integer failDelayMs;
     public Double passMargin;
     public Double failMargin;
     public Boolean isDeferred;
-    public String mode;
+    public Mode mode;
 
 
     public List<Constraint> children = new ArrayList<>();
 
     public Constraint() {}
 
-    public Constraint(Integer id, String type, String title, String state) {
+    public Constraint(Integer id, String type, String title, Boolean bPassed) {
         super(id,type);
         this.title = title;
-        this.state = state;
-    }
-
-    public boolean isPassed() {
-        return "passed".equalsIgnoreCase(state);
+        this.passed = bPassed;
     }
 
     @Override

@@ -112,6 +112,24 @@ public class SerialCmd {
         return new ResponseExtractor(jsonNode).extract(Environment.class, "env");
     }
 
+    // NOTE: Only use this if you really want to pause indefinitely (requires explicit "resume")
+    public void pauseConstraintProcessing() throws ArduinoException {
+        ResponseExtractor.validateReturnCode(execute("pause"));
+    }
+
+    public void pauseConstraintProcessing(int seconds) throws ArduinoException {
+        ResponseExtractor.validateReturnCode(execute("pause," + seconds ));
+    }
+
+    public void resumeConstraintProcessing() throws ArduinoException {
+        ResponseExtractor.validateReturnCode(execute("resume"));
+    }
+
+    public Boolean isPaused() throws ArduinoException {
+        JsonNode jsonNode = execute("get,isPaused");
+        return new ResponseExtractor(jsonNode).extract(Boolean.class, "isPaused");
+    }
+
     public void doReset() throws ArduinoException {
         ResponseExtractor.validateReturnCode(execute("reset"));
     }

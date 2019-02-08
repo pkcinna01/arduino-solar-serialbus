@@ -5,10 +5,8 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class CoolingFan extends Device {
+public class CoolingFan extends PowerSwitch {
 
-    public Integer relayPin;
-    public Integer onValue;
     public Double onTemp;
     public Double offTemp;
     public Integer minDurationMs;

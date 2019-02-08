@@ -9,6 +9,7 @@ import com.xmonit.solar.arduino.json.ResponseExtractor;
 
 public abstract class Dao extends SerialCmd {
 
+    
     protected class ObjectFieldAccessor<FieldT> extends FieldAccessor<FieldT> {
         public int id;
         public ObjectType objectType;

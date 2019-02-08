@@ -13,8 +13,8 @@ public class CompositeConstraint extends Constraint {
     public CompositeConstraint(){
     }
 
-    public CompositeConstraint(Integer id, String type, String title, String state) {
-        super(id, type, title,state);
+    public CompositeConstraint(Integer id, String type, String title, Boolean bPassed) {
+        super(id, type, title,bPassed);
     }
 
     @Override

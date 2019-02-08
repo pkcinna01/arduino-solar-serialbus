@@ -12,8 +12,8 @@ public class TimeRangeConstraint extends Constraint {
 
     public TimeRangeConstraint() {}
 
-    public TimeRangeConstraint(Integer id, String type, String title, String state) {
-        super(id, type, title,state);
+    public TimeRangeConstraint(Integer id, String type, String title, Boolean bPassed) {
+        super(id, type, title, bPassed);
     }
     
     @Override

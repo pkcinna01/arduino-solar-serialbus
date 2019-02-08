@@ -10,25 +10,25 @@ public class SensorDao extends Dao {
 
     public class PinAccessor extends SensorFieldAccessor<Integer> {
         public PinAccessor(int id) {
-            super(id,"sensorPin", Integer.class);
+            super(id, "sensorPin", Integer.class);
         }
     }
 
     public class SampleCntAccessor extends SensorFieldAccessor<Integer> {
         public SampleCntAccessor(int id) {
-            super(id,"sampleCnt", Integer.class);
+            super(id, "sampleCnt", Integer.class);
         }
     }
 
     public class SampleIntervalMsAccessor extends SensorFieldAccessor<Integer> {
         public SampleIntervalMsAccessor(int id) {
-            super(id,"sampleIntervalMs", Integer.class);
+            super(id, "sampleIntervalMs", Integer.class);
         }
     }
 
     public class SensorFieldAccessor<ResultT> extends ObjectFieldAccessor<ResultT> {
         public SensorFieldAccessor(int id, String fieldName, Class<ResultT> c) {
-            super(id,ObjectType.SENSOR,fieldName,c);
+            super(id, ObjectType.SENSOR, fieldName, c);
         }
     }
 
@@ -43,7 +43,8 @@ public class SensorDao extends Dao {
 
     @Override
     public Sensor[] findByTitleNotLike(String wildcardFilter, boolean bVerbose) throws ArduinoException {
-        return doCommand("exclude,sensors," + wildcardFilter, "sensors", Sensor[].class, bVerbose);    }
+        return doCommand("exclude,sensors," + wildcardFilter, "sensors", Sensor[].class, bVerbose);
+    }
 
     @Override
     public Sensor[] findWhereIdIn(int[] ids, boolean bVerbose) throws ArduinoException {

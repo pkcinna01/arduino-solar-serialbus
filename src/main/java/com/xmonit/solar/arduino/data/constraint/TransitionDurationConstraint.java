@@ -13,8 +13,8 @@ public class TransitionDurationConstraint extends Constraint {
 
     public TransitionDurationConstraint() {}
 
-    public TransitionDurationConstraint(Integer id, String type, String title, String state) {
-        super(id, type, title,state);
+    public TransitionDurationConstraint(Integer id, String type, String title, Boolean bPassed) {
+        super(id, type, title, bPassed);
     }
     
     @Override

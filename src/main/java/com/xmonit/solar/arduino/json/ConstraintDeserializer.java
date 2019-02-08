@@ -61,7 +61,7 @@ public class ConstraintDeserializer extends StdDeserializer<Constraint> {
                         node.get("id").asInt(),
                         type,
                         node.get("title").asText(),
-                        node.get("state").asText()
+                        node.get("passed").asBoolean()
                 );
         }
 

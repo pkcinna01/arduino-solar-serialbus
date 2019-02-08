@@ -1,5 +1,6 @@
 package com.xmonit.solar.arduino.data.device;
 
+import com.xmonit.solar.arduino.data.LogicLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -8,6 +9,8 @@ import lombok.EqualsAndHashCode;
 public class PowerSwitch extends Device {
 
     public Integer relayPin;
+    public Boolean on;
+    public LogicLevel relayOnSignal;
 
     public PowerSwitch() {}
 

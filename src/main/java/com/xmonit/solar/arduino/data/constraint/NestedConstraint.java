@@ -10,8 +10,8 @@ public class NestedConstraint extends Constraint {
     public NestedConstraint(){
     }
 
-    public NestedConstraint(Integer id, String type, String title, String state) {
-        super(id, type, title,state);
+    public NestedConstraint(Integer id, String type, String title, Boolean bPassed) {
+        super(id, type, title, bPassed);
     }
 
     @Override

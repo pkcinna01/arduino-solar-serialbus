@@ -12,8 +12,8 @@ public class RangeConstraint extends Constraint {
 
     public RangeConstraint() {}
 
-    public RangeConstraint(Integer id, String type, String title, String state) {
-        super(id, type, title,state);
+    public RangeConstraint(Integer id, String type, String title, Boolean bPassed) {
+        super(id, type, title, bPassed);
     }
     
     @Override

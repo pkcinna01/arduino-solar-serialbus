@@ -1,6 +1,7 @@
 package com.xmonit.solar.arduino.dao;
 
 import com.xmonit.solar.arduino.ArduinoException;
+import com.xmonit.solar.arduino.dao.capability.CapabilityDao;
 import com.xmonit.solar.arduino.data.constraint.Constraint;
 import org.junit.Before;
 

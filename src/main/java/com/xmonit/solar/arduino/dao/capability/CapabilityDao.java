@@ -1,7 +1,8 @@
-package com.xmonit.solar.arduino.dao;
+package com.xmonit.solar.arduino.dao.capability;
 
 import com.xmonit.solar.arduino.ArduinoException;
 import com.xmonit.solar.arduino.ArduinoSerialBus;
+import com.xmonit.solar.arduino.dao.Dao;
 import com.xmonit.solar.arduino.data.capability.Capability;
 import org.apache.commons.lang3.StringUtils;
 
