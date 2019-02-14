@@ -8,7 +8,7 @@ import org.junit.Before;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 
-public class VoltageSensorDaoTest extends DaoTestBase<VoltageSensorDao, VoltageSensor> {
+public class VoltageSensorDaoTest extends DomainDaoTestBase<VoltageSensorDao, VoltageSensor> {
 
     @Before
     @Override

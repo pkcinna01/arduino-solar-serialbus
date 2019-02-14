@@ -4,9 +4,11 @@ package com.xmonit.solar.arduino;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.xmonit.solar.arduino.data.Eeprom;
 import com.xmonit.solar.arduino.data.Environment;
+import com.xmonit.solar.arduino.data.JsonFormat;
 import com.xmonit.solar.arduino.data.Time;
 import com.xmonit.solar.arduino.json.ArduinoMapper;
 import com.xmonit.solar.arduino.json.ResponseExtractor;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 
 import java.time.LocalDateTime;
 
@@ -62,7 +64,11 @@ public class SerialCmd {
     }
 
     public enum ObjectType {
-        CAPABILITY, CONSTRAINT, DEVICE, SENSOR;
+        CAPABILITY, CONSTRAINT, DEVICE, EEPROM, ENV, SENSOR;
+    }
+
+    public interface ReadOnly {
+
     }
 
     public class TimeAccessor extends FieldAccessor<Time> {
@@ -102,34 +108,6 @@ public class SerialCmd {
         return new ResponseExtractor(jsonNode);
     }
 
-    public Eeprom doGetEeprom() throws ArduinoException {
-        JsonNode jsonNode = execute("get,eeprom");
-        return new ResponseExtractor(jsonNode).extract(Eeprom.class, "eeprom");
-    }
-
-    public Environment doGetEnvironment() throws ArduinoException {
-        JsonNode jsonNode = execute("get,env");
-        return new ResponseExtractor(jsonNode).extract(Environment.class, "env");
-    }
-
-    // NOTE: Only use this if you really want to pause indefinitely (requires explicit "resume")
-    public void pauseConstraintProcessing() throws ArduinoException {
-        ResponseExtractor.validateReturnCode(execute("pause"));
-    }
-
-    public void pauseConstraintProcessing(int seconds) throws ArduinoException {
-        ResponseExtractor.validateReturnCode(execute("pause," + seconds ));
-    }
-
-    public void resumeConstraintProcessing() throws ArduinoException {
-        ResponseExtractor.validateReturnCode(execute("resume"));
-    }
-
-    public Boolean isPaused() throws ArduinoException {
-        JsonNode jsonNode = execute("get,isPaused");
-        return new ResponseExtractor(jsonNode).extract(Boolean.class, "isPaused");
-    }
-
     public void doReset() throws ArduinoException {
         ResponseExtractor.validateReturnCode(execute("reset"));
     }
@@ -155,8 +133,40 @@ public class SerialCmd {
         return execute(sb.toString());
     }
 
-    public FieldAccessor<String> jsonFormat() {
-        return new FieldAccessor<String>("jsonFormat", String.class);
+    public Eeprom getEeprom() throws ArduinoException {
+        JsonNode jsonNode = execute("get,eeprom");
+        return new ResponseExtractor(jsonNode).extract(Eeprom.class, "eeprom");
+    }
+
+    public Environment getEnvironment() throws ArduinoException {
+        JsonNode jsonNode = execute("get,env");
+        Environment env = new ResponseExtractor(jsonNode).extract(Environment.class, "env");
+        env.setTty( serialBus.getPortName() );
+        env.name = serialBus.name;
+        env.id = serialBus.id;
+        return env;
+    }
+
+    public Boolean isPaused() throws ArduinoException {
+        JsonNode jsonNode = execute("get,isPaused");
+        return new ResponseExtractor(jsonNode).extract(Boolean.class, "isPaused");
+    }
+
+    public FieldAccessor<JsonFormat> jsonFormat() {
+        return new FieldAccessor<JsonFormat>("jsonFormat", JsonFormat.class);
+    }
+
+    // NOTE: Only use this if you really want to pause indefinitely (requires explicit "resume")
+    public void pauseConstraintProcessing() throws ArduinoException {
+        ResponseExtractor.validateReturnCode(execute("pause"));
+    }
+
+    public void pauseConstraintProcessing(int seconds) throws ArduinoException {
+        ResponseExtractor.validateReturnCode(execute("pause," + seconds ));
+    }
+
+    public void resumeConstraintProcessing() throws ArduinoException {
+        ResponseExtractor.validateReturnCode(execute("resume"));
     }
 
     public TimeAccessor time() {

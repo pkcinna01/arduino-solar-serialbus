@@ -2,6 +2,7 @@ package com.xmonit.solar.arduino;
 
 import com.xmonit.solar.arduino.data.Eeprom;
 import com.xmonit.solar.arduino.data.Environment;
+import com.xmonit.solar.arduino.data.JsonFormat;
 import com.xmonit.solar.arduino.data.Time;
 import com.xmonit.solar.arduino.data.device.Device;
 import com.xmonit.solar.arduino.data.sensor.Sensor;
@@ -35,25 +36,25 @@ public class SerialCmdTest extends SerialBusTestSetup {
 
 
     @Test
-    public void doGetEnvironment() throws ArduinoException {
-        Environment env = new SerialCmd(serialBus).doGetEnvironment();
+    public void getEnvironmentTest() throws ArduinoException {
+        Environment env = new SerialCmd(serialBus).getEnvironment();
         System.out.println(env);
     }
 
     @Test
-    public void doGetEeprom() throws ArduinoException {
-        Eeprom eeprom = new SerialCmd(serialBus).doGetEeprom();
+    public void getEepromTest() throws ArduinoException {
+        Eeprom eeprom = new SerialCmd(serialBus).getEeprom();
         System.out.println(eeprom);
     }
 
     @Test
-    public void doGetTime() throws ArduinoException {
+    public void getTimeTest() throws ArduinoException {
         Time time = new SerialCmd(serialBus).time().get();
         System.out.println(time);
     }
 
     @Test
-    public void doSetTime() throws ArduinoException {
+    public void setTimeTest() throws ArduinoException {
         LocalDateTime when = LocalDateTime.now();
         SerialCmd.TimeAccessor time = new SerialCmd(serialBus).time();
         time.set(when);
@@ -62,17 +63,17 @@ public class SerialCmdTest extends SerialBusTestSetup {
 
     @Test
     public void doGetJsonFormat() throws ArduinoException {
-        String strFmt = new SerialCmd(serialBus).jsonFormat().get();
-        System.out.println(strFmt);
+        JsonFormat fmt = new SerialCmd(serialBus).jsonFormat().get();
+        System.out.println(fmt);
     }
 
     @Test
     public void doSetJsonFormat() throws ArduinoException {
-        SerialCmd.FieldAccessor<String> jsonFmt = new SerialCmd(serialBus).jsonFormat();
-        String oldFormat = jsonFmt.get();
-        String newFormat = "pretty".equalsIgnoreCase(oldFormat) ? "compact" : "pretty";
+        SerialCmd.FieldAccessor<JsonFormat> jsonFmt = new SerialCmd(serialBus).jsonFormat();
+        JsonFormat oldFormat = jsonFmt.get();
+        JsonFormat newFormat = oldFormat == JsonFormat.PRETTY ? JsonFormat.COMPACT : JsonFormat.PRETTY;
         jsonFmt.set(newFormat);
-        assertEquals(newFormat,jsonFmt.get().toLowerCase());
+        assertEquals(newFormat,jsonFmt.get());
         jsonFmt.set(oldFormat);
     }
 }

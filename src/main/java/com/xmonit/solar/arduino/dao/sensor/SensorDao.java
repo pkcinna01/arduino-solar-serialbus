@@ -1,12 +1,12 @@
 package com.xmonit.solar.arduino.dao.sensor;
 
 import com.xmonit.solar.arduino.ArduinoException;
-import com.xmonit.solar.arduino.ArduinoSerialBus;
-import com.xmonit.solar.arduino.dao.Dao;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
+import com.xmonit.solar.arduino.dao.DomainDao;
 import com.xmonit.solar.arduino.data.sensor.Sensor;
 import org.apache.commons.lang3.StringUtils;
 
-public class SensorDao extends Dao {
+public class SensorDao extends DomainDao {
 
     public class PinAccessor extends SensorFieldAccessor<Integer> {
         public PinAccessor(int id) {

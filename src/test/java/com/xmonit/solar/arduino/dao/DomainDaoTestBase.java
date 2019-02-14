@@ -7,7 +7,7 @@ import com.xmonit.solar.arduino.data.DomainObject;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
-public class DaoTestBase<DaoType extends Dao, DataT extends DomainObject> extends SerialBusTestSetup {
+public class DomainDaoTestBase<DaoType extends DomainDao, DataT extends DomainObject> extends SerialBusTestSetup {
 
     protected DaoType dao;
 

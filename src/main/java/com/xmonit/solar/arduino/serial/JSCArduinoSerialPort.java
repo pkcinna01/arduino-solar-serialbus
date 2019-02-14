@@ -1,20 +1,35 @@
-package com.xmonit.solar.arduino;
+package com.xmonit.solar.arduino.serial;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import com.xmonit.solar.arduino.ArduinoException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
-import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
-import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_DATA_RECEIVED;
-import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_DATA_WRITTEN;
+import static com.fazecast.jSerialComm.SerialPort.*;
 
-public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements SerialPortDataListener {
+public class JSCArduinoSerialPort extends ArduinoSerialPort implements SerialPortDataListener {
+
+    static long lastOpenTimeMs = 0;
+
+    public static void createPorts(String strTtyRegEx, List<ArduinoSerialPort> ports) {
+        for(SerialPort sp: SerialPort.getCommPorts()) {
+            if (sp.getSystemPortName().matches(strTtyRegEx)) {
+                ports.add( new JSCArduinoSerialPort(sp));
+            }
+        }
+    }
 
     protected SerialPort jscSerialPort;
+
+    public JSCArduinoSerialPort(SerialPort sp) {
+        this.jscSerialPort = sp;
+    }
+
 
     @Override
     public void close() {
@@ -33,18 +48,30 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
 
 
     @Override
+    public int getListeningEvents() {
+        return LISTENING_EVENT_DATA_AVAILABLE | LISTENING_EVENT_DATA_RECEIVED | LISTENING_EVENT_DATA_WRITTEN;
+    }
+
+    @Override
     public OutputStream getOutputStream() throws IOException {
 
         return jscSerialPort.getOutputStream();
     }
 
-
-    static long lastOpenTimeMs = 0;
+    @Override
+    public String getPortName() {
+        return jscSerialPort == null ? null : jscSerialPort.getSystemPortName();
+    }
 
     @Override
-    public synchronized void open(String portNamePattern) throws ArduinoException {
+    public boolean isOpen() {
+        return jscSerialPort != null && jscSerialPort.isOpen();
+    }
+
+
+    @Override
+    public synchronized void open() throws ArduinoException {
         try {
-            jscSerialPort = findPort(portNamePattern);
             jscSerialPort.setComPortParameters(baudRate,dataBits,stopBits,parity);
             //jscSerialPort.addDataListener(this); // only use in async mode or some data will go to listener
             //jscSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,3000,0);
@@ -58,34 +85,9 @@ public class JSerialCommSerialPortImpl extends ArduinoSerialPort implements Seri
             Thread.sleep( elapsedTimeSinceLastOpenMs > 5*60*1000 ? 2000 : 250);
         } catch ( Exception ex ) {
             jscSerialPort = null;
-            throw new ArduinoException("Failed opening comm port for " + portNamePattern, ex);
+            throw new ArduinoException("Failed opening comm port for " + getPortName(), ex);
         }
 
-    }
-
-    @Override
-    public String getPortName() {
-        return jscSerialPort == null ? null : jscSerialPort.getSystemPortName();
-    }
-
-    @Override
-    public boolean isOpen() {
-        return jscSerialPort != null && jscSerialPort.isOpen();
-    }
-
-    private SerialPort findPort(String commPortName) throws ArduinoException {
-
-        for(SerialPort sp: com.fazecast.jSerialComm.SerialPort.getCommPorts()) {
-            if (sp.getSystemPortName().matches(commPortName)) {
-                return sp;
-            }
-        }
-        throw new ArduinoException("No serial port matched regex: '" + commPortName + "'", -1);
-    }
-
-    @Override
-    public int getListeningEvents() {
-        return LISTENING_EVENT_DATA_AVAILABLE | LISTENING_EVENT_DATA_RECEIVED | LISTENING_EVENT_DATA_WRITTEN;
     }
 
     @Override

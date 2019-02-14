@@ -1,7 +1,7 @@
 package com.xmonit.solar.arduino.dao.sensor;
 
 import com.xmonit.solar.arduino.ArduinoException;
-import com.xmonit.solar.arduino.ArduinoSerialBus;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 import com.xmonit.solar.arduino.data.sensor.Sensor;
 import com.xmonit.solar.arduino.data.sensor.VoltageSensor;
 

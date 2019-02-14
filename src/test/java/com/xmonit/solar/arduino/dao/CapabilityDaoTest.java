@@ -5,7 +5,7 @@ import com.xmonit.solar.arduino.dao.capability.CapabilityDao;
 import com.xmonit.solar.arduino.data.constraint.Constraint;
 import org.junit.Before;
 
-public class CapabilityDaoTest extends DaoTestBase<CapabilityDao, Constraint> {
+public class CapabilityDaoTest extends DomainDaoTestBase<CapabilityDao, Constraint> {
 
     @Before
     @Override

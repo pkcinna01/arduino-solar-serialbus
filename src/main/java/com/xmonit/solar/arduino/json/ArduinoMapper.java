@@ -1,5 +1,6 @@
 package com.xmonit.solar.arduino.json;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -19,6 +20,7 @@ public class ArduinoMapper extends ObjectMapper {
         module.addDeserializer(Capability.class, new CapabilityDeserializer(null));
         module.addDeserializer(Constraint.class, new ConstraintDeserializer(null));
         registerModule(module);
+        setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     }
     
     public String asString(Object obj) throws JsonProcessingException {

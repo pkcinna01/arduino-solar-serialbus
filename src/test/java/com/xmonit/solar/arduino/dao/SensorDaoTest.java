@@ -7,7 +7,7 @@ import org.junit.Before;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class SensorDaoTest extends DaoTestBase<SensorDao, Sensor> {
+public class SensorDaoTest extends DomainDaoTestBase<SensorDao, Sensor> {
 
     @Before
     @Override

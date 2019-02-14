@@ -7,7 +7,7 @@ import org.junit.Before;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class ConstraintDaoTest extends DaoTestBase<ConstraintDao, Constraint> {
+public class ConstraintDaoTest extends DomainDaoTestBase<ConstraintDao, Constraint> {
 
     int constraintId = 1;
 

@@ -10,7 +10,7 @@ import org.junit.Before;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class DeviceDaoTest extends DaoTestBase<DeviceDao, Device> {
+public class DeviceDaoTest extends DomainDaoTestBase<DeviceDao, Device> {
 
     @Before
     @Override

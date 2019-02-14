@@ -11,7 +11,7 @@ import org.junit.Before;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class PowerSwitchDaoTest extends DaoTestBase<PowerSwitchDao, PowerSwitch> {
+public class PowerSwitchDaoTest extends DomainDaoTestBase<PowerSwitchDao, PowerSwitch> {
 
     @Before
     @Override

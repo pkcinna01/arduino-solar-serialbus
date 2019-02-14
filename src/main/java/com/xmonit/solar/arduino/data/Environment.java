@@ -1,13 +1,12 @@
 package com.xmonit.solar.arduino.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.xmonit.solar.arduino.json.ArduinoMapper;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.xmonit.solar.arduino.json.ArduinoMapper;
 
 
 @Data
@@ -19,6 +18,9 @@ public class Environment {
    public Boolean timeSet; // was time explicitly set since last startup (yes/no)
    public Integer vcc; // arduino Vref reading for use in sensors
    public String version;
+   public String tty; // populated from java side (not from arduino)
+   public String name;
+   public Integer id;
 
    @JsonIgnore
    public LocalDateTime getDateTime() {

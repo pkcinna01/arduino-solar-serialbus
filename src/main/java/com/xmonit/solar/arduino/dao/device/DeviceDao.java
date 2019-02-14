@@ -1,17 +1,35 @@
 package com.xmonit.solar.arduino.dao.device;
 
 import com.xmonit.solar.arduino.ArduinoException;
-import com.xmonit.solar.arduino.ArduinoSerialBus;
-import com.xmonit.solar.arduino.dao.Dao;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
+import com.xmonit.solar.arduino.dao.DomainDao;
 import com.xmonit.solar.arduino.dao.constraint.ConstraintDao;
 import com.xmonit.solar.arduino.data.constraint.Constraint;
 import com.xmonit.solar.arduino.data.device.Device;
 import org.apache.commons.lang3.StringUtils;
 
-public class DeviceDao extends Dao {
+public class DeviceDao extends DomainDao {
+
+    public class ConstraintAccessor extends DeviceFieldAccessor<Constraint> {
+        public ConstraintAccessor(int deviceId) {
+            super(deviceId, "constraint", Constraint.class);
+        }
+        @Override
+        public void set(Constraint c) throws ArduinoException { throw new ArduinoException("Not supported", 500); }
+    }
+
+    public class DeviceFieldAccessor<ResultT> extends ObjectFieldAccessor<ResultT> {
+        public DeviceFieldAccessor(int id, String fieldName, Class<ResultT> c) {
+            super(id, ObjectType.DEVICE, fieldName, c);
+        }
+    }
 
     public DeviceDao(ArduinoSerialBus serialBus){
         super(serialBus);
+    }
+
+    public ConstraintAccessor constraint(int deviceId) {
+        return new ConstraintAccessor(deviceId);
     }
 
     @Override
@@ -39,28 +57,14 @@ public class DeviceDao extends Dao {
         return doCommand("get,devices", "devices", Device[].class, bVerbose);
     }
 
-    public class DeviceFieldAccessor<ResultT> extends ObjectFieldAccessor<ResultT> {
-        public DeviceFieldAccessor(int id, String fieldName, Class<ResultT> c) {
-            super(id, ObjectType.DEVICE, fieldName, c);
-        }
-    }
-
-    public class ConstraintAccessor extends DeviceFieldAccessor<Constraint> {
-        public ConstraintAccessor(int deviceId) {
-            super(deviceId, "constraint", Constraint.class);
-        }
-        @Override
-        public void set(Constraint c) throws ArduinoException { throw new ArduinoException("Not supported", 500); }
-    }
-
-    public ConstraintAccessor constraint(int deviceId) {
-        return new ConstraintAccessor(deviceId);
-    }
-
     public ConstraintDao.ModeAccessor mode(int deviceId) throws ArduinoException {
-        Device d = get(deviceId,true);
+        int constraintId = -1;
+        if ( deviceId >= 0) {
+            Device d = get(deviceId, true);
+            constraintId = d.constraint.id;
+        }
         ConstraintDao constraintDao = new ConstraintDao(serialBus);
-        return constraintDao.mode(d.constraint.id);
+        return constraintDao.mode(constraintId);
     }
 
 

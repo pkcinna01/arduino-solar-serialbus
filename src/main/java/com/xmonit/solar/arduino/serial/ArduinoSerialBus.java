@@ -1,31 +1,43 @@
-package com.xmonit.solar.arduino;
+package com.xmonit.solar.arduino.serial;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xmonit.solar.arduino.ArduinoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 
 public class ArduinoSerialBus {
 
     private static final Logger logger = LoggerFactory.getLogger(ArduinoSerialBus.class);
 
-    protected static short requestId = 0;
+    protected static AtomicInteger requestId = new AtomicInteger();
 
-    protected ArduinoConfig config;
-    private ObjectMapper mapper = new ObjectMapper();
-
-    public ArduinoSerialPort serialPort = new JSerialCommSerialPortImpl();
-    //public ArduinoSerialPort serialPort = new PureJavaCommSerialPortImpl();
-
-
-    public ArduinoSerialBus(ArduinoConfig config) {
-        this.config = config;
+    static long checksum(byte[] bytes) {
+        return checksum(bytes, bytes.length);
     }
 
+    static long checksum(byte[] bytes, int byteCnt) {
+        long computedChecksum = 0;
+        for (int i = 0; i < byteCnt; i++) {
+            computedChecksum += bytes[i];
+        }
+        return computedChecksum;
+    }
+
+    public Integer id;
+    public String name;
+    public ArduinoSerialPort serialPort;
+
+
+    public ArduinoSerialBus(ArduinoSerialPort serialPort) {
+        this.serialPort = serialPort;
+    }
 
     public synchronized void close() {
 
@@ -43,13 +55,16 @@ public class ArduinoSerialBus {
 
 
     public String execute(String cmd) throws ArduinoException {
-        return execute(cmd, null, null,true);
+        return execute(cmd, null,true);
     }
+
 
     protected synchronized String execute(String command, Integer explicitReqId, boolean validate ) throws ArduinoException {
 
         try {
-
+            if ( !serialPort.isOpen() ) {
+                serialPort.open();
+            }
             int reqId;
             if ( explicitReqId != null ) {
                 if ( explicitReqId > 0x7FFF ) {
@@ -57,19 +72,19 @@ public class ArduinoSerialBus {
                 }
                 reqId = explicitReqId;
             } else {
-                if ( ++requestId < 0 ) { // >= 0x7FFF ) {
-                    requestId = 1;
+                if ( requestId.incrementAndGet() < 0 ) { // >= 0x7FFF ) {
+                    requestId.set(1);
                 }
-                reqId = requestId;
+                reqId = requestId.get();
             }
 
             String data = command + "|" + reqId + "\n";
             if ( !command.startsWith("GET") ) {
                 logger.info(data);
             }
-            serialPort.send(data);
+            send(data);
 
-            String strResp = serialPort.readUntilLine("^#END:"+reqId+":[:0-9]*#$",30000);
+            String strResp = readUntilLine("^#END:"+reqId+":[:0-9]*#$",30000);
             InputStream inputStream = new ByteArrayInputStream(strResp.getBytes());
 
             return extractResponse(inputStream,reqId,validate);
@@ -82,33 +97,6 @@ public class ArduinoSerialBus {
             throw new ArduinoException("ArduinoSerialBus.execute('" + command + "') failed.", ex);
         }
     }
-
-    public synchronized String execute(String cmd, String portName, Integer explicitReqId) throws Exception {
-        return execute(cmd,portName,explicitReqId,true);
-    }
-
-    public synchronized String execute(String cmd, String portName, Integer explicitReqId, boolean validate) throws ArduinoException {
-
-        if (cmd == null || cmd.trim().isEmpty()) {
-            cmd = config.getCmd();
-        }
-
-        if (portName == null || portName.isEmpty()) {
-            portName = config.getCommPortRegEx();
-        }
-
-        if ( isOpen() ) {
-            if ( !serialPort.portNameMatches(portName) ) {
-                logger.warn("Existing serial port id '" + serialPort.getPortName() + "' does not match pattern '" + portName + "'.");
-                close();
-            }
-        } else {
-            open(portName);
-        }
-
-        return execute(cmd, explicitReqId, validate);
-    }
-
 
     private String extractResponse(InputStream respInputStream, int reqId, boolean validate) throws Exception {
 
@@ -134,8 +122,8 @@ public class ArduinoSerialBus {
                     bFoundEnd = true;
                     String[] tokens = line.replace("#","").split(":");
                     String strErrMsg = null;
-                    if ( tokens.length != 4 ) {
-                        strErrMsg = "Invalid #END# footer. Expected '#END:{req id}:{resp length}:{checksum}#'. Found: "
+                    if ( tokens.length != 6 ) {
+                        strErrMsg = "Invalid #END# footer. Expected '#END:{req id}:{resp length}:{checksum}:{timeSetIndicator}:{deviceId}#'. Found: "
                         + line;
                     } else {
                         int id = Integer.parseInt(tokens[1]);
@@ -149,7 +137,7 @@ public class ArduinoSerialBus {
                                         + " but actual length=" + respLen;
                             }
                             int checksum = Integer.parseInt(tokens[3]);
-                            long computedChecksum = ArduinoSerialPort.checksum(resp.getBytes(),respLen);
+                            long computedChecksum = ArduinoSerialBus.checksum(resp.getBytes(),respLen);
                             if ( checksum != computedChecksum ) {
                                 strErrMsg = "Request #" + reqId + " response footer contains checksum=" + checksum
                                         + " but actual checksum=" + computedChecksum;
@@ -221,15 +209,21 @@ public class ArduinoSerialBus {
     }
 
 
+    public void init(String name, Integer id) {
+        this.name = name;
+        this.id = id;
+    }
+
+
     public boolean isOpen() {
         return serialPort.isOpen();
     }
 
 
-    private void open(String commPortNamePattern) throws ArduinoException {
+    private void open() throws ArduinoException {
 
-        serialPort.baudRate = config.getBaudRate();
-        serialPort.open(commPortNamePattern);
+        //serialPort.baudRate = config.getBaudRate();
+        serialPort.open();
         logger.info("USB port opened for '" + serialPort.getPortName() + "'. Baud rate: " + serialPort.baudRate);
     }
 
@@ -259,6 +253,57 @@ public class ArduinoSerialBus {
         }
         //logger.debug(sb.toString());
         return sb.toString();
+    }
+
+
+    public String readUntilLine(String lineRegEx, int timeoutMs) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        StringBuilder lineBuilder = new StringBuilder();
+        InputStream inputStream = serialPort.getInputStream();
+        Pattern linePattern = Pattern.compile(lineRegEx);
+        long startMs = System.currentTimeMillis();
+        final int maxLen = 10 * 1024;
+        try {
+            while (true) {
+
+                if (sb.length() >= maxLen) {
+                    throw new IOException("Exceeded max buffer size (" + maxLen + ") while reading arduino response");
+                }
+                if (System.currentTimeMillis() - startMs > timeoutMs) {
+                    logger.info("Timed out. Abandoning data: " + sb.toString());
+                    throw new IOException("Timed out waiting for arduino input matching '" + lineRegEx + "' (exceeded "
+                            + timeoutMs + " ms)");
+                }
+
+                int c = inputStream.read();
+
+                if (c == 0 || c == '\r') {
+                    continue;
+                }
+
+                if (c == '\n') {
+                    String line = lineBuilder.toString();
+                    sb.append(line);
+                    lineBuilder.setLength(0);
+                    if (linePattern.matcher(line).matches()) {
+                        break;
+                    } else {
+                        sb.append((char) c);
+                    }
+                } else {
+                    lineBuilder.append((char) c);
+                }
+            }
+        } finally {
+            inputStream.close();
+        }
+        return sb.toString();
+    }
+
+    public void send(String data) throws IOException {
+        OutputStream outputStream = serialPort.getOutputStream();
+        outputStream.write(data.getBytes());
+        outputStream.flush();
     }
 
 

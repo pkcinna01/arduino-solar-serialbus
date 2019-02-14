@@ -12,7 +12,7 @@ import org.junit.Before;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class CoolingFanDaoTest extends DaoTestBase<CoolingFanDao, CoolingFan> {
+public class CoolingFanDaoTest extends DomainDaoTestBase<CoolingFanDao, CoolingFan> {
 
     @Before
     @Override

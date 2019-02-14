@@ -4,18 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.xmonit.solar.arduino.json.ArduinoMapper;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public abstract class DomainObject {
+@EqualsAndHashCode(callSuper = true)
+public abstract class DomainObject extends ArduinoObject {
 
     public Integer id;
-    public String type;
 
     public DomainObject() {}
 
     public DomainObject(Integer id, String type) {
+        super(type);
         this.id = id;
-        this.type = type;
     }
 
     abstract public String getTitle(); // some arduino things have a title and some have a name so use this to normalize both

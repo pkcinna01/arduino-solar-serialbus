@@ -1,19 +1,20 @@
 package com.xmonit.solar.arduino;
 
+import com.xmonit.solar.arduino.serial.ArduinoSerialPort;
+
 public class TestConfigArduino implements ArduinoConfig {
 
-    String cmd = "GET,SENSORS";
     String commPortRegEx = "ttyUSB0";
 
     @Override
-    public String getCmd() {
-        return cmd;
+    public ArduinoConfig.PortConfig getPortConfig(String devicedId) {
+
+        ArduinoConfig.PortConfig config = new ArduinoConfig.PortConfig();
+        config.baudRate = 115200;
+        config.dataBits = ArduinoSerialPort.DATABITS_8;
+        config.parity = ArduinoSerialPort.PARITY_NONE;
+        config.stopBits = ArduinoSerialPort.STOPBITS_1;
+        return config;
     }
 
-    @Override
-    public String getCommPortRegEx() {
-        return commPortRegEx;
-    }
-
-    public Integer getBaudRate() { return 115200; }
 }

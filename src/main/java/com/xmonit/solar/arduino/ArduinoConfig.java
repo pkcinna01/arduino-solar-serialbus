@@ -3,10 +3,11 @@ package com.xmonit.solar.arduino;
 
 public interface ArduinoConfig {
 
-    public String getCmd();
+    public class PortConfig {
+        public int baudRate, dataBits, stopBits, parity;
+    }
 
-    public String getCommPortRegEx();
+    public PortConfig getPortConfig(String deviceId);
 
-    public Integer getBaudRate();
 
 }

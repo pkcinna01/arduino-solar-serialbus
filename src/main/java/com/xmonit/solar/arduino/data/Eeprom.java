@@ -10,10 +10,12 @@ import lombok.Data;
 public class Eeprom {
 
    public String[] commands;   // List of commands run on startup
-   public String jsonFormat;   // COMPACT or PRETTY
+   public JsonFormat jsonFormat;   // COMPACT or PRETTY
    public String serialConfig; // 8N1, 8E1, and 8O1 (only 8 bit/1 stop bit modes supported)
    public Integer serialSpeed;
    public String version;      // EEPROM version value should match env RAM value
+   public String deviceName;
+   public Integer deviceId;
 
    @Override
    public String toString() {
