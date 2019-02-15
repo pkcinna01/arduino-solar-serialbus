@@ -1,11 +1,14 @@
 package com.xmonit.solar.arduino.dao.sensor;
 
 import com.xmonit.solar.arduino.ArduinoException;
-import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 import com.xmonit.solar.arduino.dao.DomainDao;
+import com.xmonit.solar.arduino.dao.annotation.ArduinoDao;
+import com.xmonit.solar.arduino.dao.annotation.IntegerAccessor;
 import com.xmonit.solar.arduino.data.sensor.Sensor;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 import org.apache.commons.lang3.StringUtils;
 
+@ArduinoDao
 public class SensorDao extends DomainDao {
 
     public class PinAccessor extends SensorFieldAccessor<Integer> {
@@ -61,14 +64,17 @@ public class SensorDao extends DomainDao {
         return doCommand("get,sensors", "sensors", Sensor[].class, bVerbose);
     }
 
+    @IntegerAccessor
     public SampleCntAccessor sampleCnt(int id) {
         return new SampleCntAccessor(id);
     }
 
+    @IntegerAccessor(validationRegEx = "[+-][0-9]+")
     public SampleIntervalMsAccessor sampleIntervalMs(int id) {
         return new SampleIntervalMsAccessor(id);
     }
 
+    @IntegerAccessor
     public PinAccessor sensorPin(int id) {
         return new PinAccessor(id);
     }

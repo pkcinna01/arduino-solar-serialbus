@@ -1,11 +1,15 @@
 package com.xmonit.solar.arduino.dao.constraint;
 
 import com.xmonit.solar.arduino.ArduinoException;
-import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 import com.xmonit.solar.arduino.dao.DomainDao;
+import com.xmonit.solar.arduino.dao.annotation.ArduinoDao;
+import com.xmonit.solar.arduino.dao.annotation.BooleanAccessor;
+import com.xmonit.solar.arduino.dao.annotation.ChoiceAccessor;
 import com.xmonit.solar.arduino.data.constraint.Constraint;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 import org.apache.commons.lang3.StringUtils;
 
+@ArduinoDao
 public class ConstraintDao extends DomainDao {
 
     public class ConstraintFieldAccessor<ResultT> extends ObjectFieldAccessor<ResultT> {
@@ -54,9 +58,12 @@ public class ConstraintDao extends DomainDao {
         return doCommand("get,constraints", "constraints", Constraint[].class, bVerbose);
     }
 
+    @ChoiceAccessor
     public ModeAccessor mode(int id) {
         return new ModeAccessor(id);
     }
+
+    @BooleanAccessor
     public PassedAccessor passed(int id) {
         return new PassedAccessor(id);
     }

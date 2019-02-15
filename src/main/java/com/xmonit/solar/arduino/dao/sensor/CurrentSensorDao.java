@@ -1,12 +1,16 @@
 package com.xmonit.solar.arduino.dao.sensor;
 
 import com.xmonit.solar.arduino.ArduinoException;
-import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
+import com.xmonit.solar.arduino.dao.annotation.ArduinoDao;
+import com.xmonit.solar.arduino.dao.annotation.ChoiceAccessor;
+import com.xmonit.solar.arduino.dao.annotation.DoubleAccessor;
 import com.xmonit.solar.arduino.data.sensor.CurrentSensor;
 import com.xmonit.solar.arduino.data.sensor.Sensor;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 
 import java.util.Arrays;
 
+@ArduinoDao
 public class CurrentSensorDao extends SensorDao {
 
     public class ChannelAccessor extends SensorFieldAccessor<CurrentSensor.Channel> {
@@ -43,10 +47,12 @@ public class CurrentSensorDao extends SensorDao {
         super(serialBus);
     }
 
+    @ChoiceAccessor
     public ChannelAccessor channel(int id) {
         return new ChannelAccessor(id);
     }
 
+    @ChoiceAccessor
     public GainAccessor gain(int id) {
         return new GainAccessor(id);
     }
@@ -57,14 +63,17 @@ public class CurrentSensorDao extends SensorDao {
         return Arrays.stream(list(true)).filter( s -> isCurrentSensor(s) ).toArray(CurrentSensor[]::new);
     }
 
+    @DoubleAccessor
     public RatedAmpsAccessor ratedAmps(int id) {
         return new RatedAmpsAccessor(id);
     }
 
+    @DoubleAccessor
     public RatedMillivoltsAccessor ratedMillivolts(int id) {
         return new RatedMillivoltsAccessor(id);
     }
 
+    @DoubleAccessor
     public RatedOhmsAccessor ratedOhms(int id) {
         return new RatedOhmsAccessor(id);
     }

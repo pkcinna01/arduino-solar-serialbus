@@ -6,19 +6,28 @@ import com.xmonit.solar.arduino.ArduinoException;
 import com.xmonit.solar.arduino.SerialCmd;
 import com.xmonit.solar.arduino.json.ResponseExtractor;
 import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
+import lombok.Data;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class Dao extends SerialCmd {
 
+    public static Map<String, List<FieldMetaData>> metaDataDictionary = new HashMap<>();
 
+    @Data
     public static class FieldMetaData {
-        public boolean bReadOnly;
+        public boolean readOnly;
         public String name;
         public String type;
+        public String validationRegEx;
+        public FieldMetaData(String name, String type, boolean readOnly, String validationRegEx) {
+            this.name = name;
+            this.type = type;
+            this.readOnly = readOnly;
+            this.validationRegEx = validationRegEx;
+        }
     }
     
     protected class SingletonFieldAccessor<FieldT> extends FieldAccessor<FieldT> {
@@ -52,35 +61,8 @@ public abstract class Dao extends SerialCmd {
         super(sb);
     }
 
-    public List<FieldMetaData> getFields() {
-        List<FieldMetaData> fields = new LinkedList<>();
-        for (Method method : getClass().getDeclaredMethods()) {
-            Class rtnClass = method.getReturnType();
-            if ( FieldAccessor.class.isAssignableFrom(rtnClass) ) {
-                FieldMetaData meta = new FieldMetaData();
-                meta.name = method.getName();
-                meta.bReadOnly = Dao.ReadOnly.class.isAssignableFrom(rtnClass);
-                try {
-                    FieldAccessor fieldAccessor = null;
-                    switch ( method.getParameterCount()) {
-                        case 0:
-                            fieldAccessor = (FieldAccessor) method.invoke(this);
-                            break;
-                        case 1:
-                            fieldAccessor = (FieldAccessor) method.invoke(this, -1);
-                            break;
-                    }
-                    if ( fieldAccessor != null ) {
-                        meta.type = fieldAccessor.resultClass.getSimpleName();
-                    }
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-                fields.add(meta);
-            }
-        }
-        return fields;
+    public List<FieldMetaData> getAccessorDefinitions() {
+        return metaDataDictionary.get(getClass().getSimpleName());
     }
+
 }

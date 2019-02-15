@@ -1,8 +1,7 @@
 package com.xmonit.solar.arduino.serial;
 
 import com.xmonit.solar.arduino.ArduinoException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import purejavacomm.CommPortIdentifier;
 import purejavacomm.SerialPort;
 
@@ -12,9 +11,10 @@ import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.List;
 
+@Slf4j
 public class PJCArduinoSerialPort extends ArduinoSerialPort {
 
-    private static final Logger logger = LoggerFactory.getLogger(PJCArduinoSerialPort.class);
+    static long lastOpenTimeMs = 0;
 
     public static void createPorts(String strTtyRegEx, List<ArduinoSerialPort> ports) {
         Enumeration<CommPortIdentifier> portList = CommPortIdentifier.getPortIdentifiers();
@@ -74,7 +74,11 @@ public class PJCArduinoSerialPort extends ArduinoSerialPort {
             pjcSerialPort.notifyOnDataAvailable(true);
             pjcSerialPort.notifyOnOutputEmpty(true);
             isOpen = true;
-            //Thread.sleep(200);
+            long elapsedTimeSinceLastOpenMs = System.currentTimeMillis() - lastOpenTimeMs;
+            lastOpenTimeMs = System.currentTimeMillis();
+            long delayMs = elapsedTimeSinceLastOpenMs > 5*60*1000 ? 1750 : 215;
+            log.debug("delay after open() = " + delayMs + "ms.");
+            Thread.sleep( delayMs );
         } catch ( Exception ex ) {
             throw new ArduinoException("Failed opening comm port for " + getPortName(), ex);
         }

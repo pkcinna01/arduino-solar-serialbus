@@ -1,6 +1,8 @@
 package com.xmonit.solar.arduino.dao.device;
 
 import com.xmonit.solar.arduino.ArduinoException;
+import com.xmonit.solar.arduino.dao.annotation.ArduinoDao;
+import com.xmonit.solar.arduino.dao.annotation.ChoiceAccessor;
 import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 import com.xmonit.solar.arduino.dao.DomainDao;
 import com.xmonit.solar.arduino.dao.constraint.ConstraintDao;
@@ -8,6 +10,7 @@ import com.xmonit.solar.arduino.data.constraint.Constraint;
 import com.xmonit.solar.arduino.data.device.Device;
 import org.apache.commons.lang3.StringUtils;
 
+@ArduinoDao
 public class DeviceDao extends DomainDao {
 
     public class ConstraintAccessor extends DeviceFieldAccessor<Constraint> {
@@ -28,6 +31,7 @@ public class DeviceDao extends DomainDao {
         super(serialBus);
     }
 
+    @com.xmonit.solar.arduino.dao.annotation.ConstraintAccessor()
     public ConstraintAccessor constraint(int deviceId) {
         return new ConstraintAccessor(deviceId);
     }
@@ -57,6 +61,7 @@ public class DeviceDao extends DomainDao {
         return doCommand("get,devices", "devices", Device[].class, bVerbose);
     }
 
+    @ChoiceAccessor
     public ConstraintDao.ModeAccessor mode(int deviceId) throws ArduinoException {
         int constraintId = -1;
         if ( deviceId >= 0) {

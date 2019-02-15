@@ -4,6 +4,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.xmonit.solar.arduino.ArduinoException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import static com.fazecast.jSerialComm.SerialPort.*;
 
+@Slf4j
 public class JSCArduinoSerialPort extends ArduinoSerialPort implements SerialPortDataListener {
 
     static long lastOpenTimeMs = 0;
@@ -82,7 +84,9 @@ public class JSCArduinoSerialPort extends ArduinoSerialPort implements SerialPor
             }
             long elapsedTimeSinceLastOpenMs = System.currentTimeMillis() - lastOpenTimeMs;
             lastOpenTimeMs = System.currentTimeMillis();
-            Thread.sleep( elapsedTimeSinceLastOpenMs > 5*60*1000 ? 2000 : 250);
+            long delayMs = elapsedTimeSinceLastOpenMs > 5*60*1000 ? 1750 : 215;
+            log.debug("delay after open() = " + delayMs + "ms.");
+            Thread.sleep( delayMs );
         } catch ( Exception ex ) {
             jscSerialPort = null;
             throw new ArduinoException("Failed opening comm port for " + getPortName(), ex);

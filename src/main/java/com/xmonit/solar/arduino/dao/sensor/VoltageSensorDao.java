@@ -1,12 +1,16 @@
 package com.xmonit.solar.arduino.dao.sensor;
 
 import com.xmonit.solar.arduino.ArduinoException;
-import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
+import com.xmonit.solar.arduino.dao.annotation.ArduinoDao;
+import com.xmonit.solar.arduino.dao.annotation.DoubleAccessor;
+import com.xmonit.solar.arduino.dao.annotation.IntegerAccessor;
 import com.xmonit.solar.arduino.data.sensor.Sensor;
 import com.xmonit.solar.arduino.data.sensor.VoltageSensor;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 
 import java.util.Arrays;
 
+@ArduinoDao
 public class VoltageSensorDao extends SensorDao {
 
     public class MaxVccAgeMsAccessor extends SensorFieldAccessor<Integer> {
@@ -43,18 +47,22 @@ public class VoltageSensorDao extends SensorDao {
         return Arrays.stream(list(true)).filter( s -> isVoltageSensor(s) ).toArray(VoltageSensor[]::new);
     }
 
+    @IntegerAccessor
     public MaxVccAgeMsAccessor maxVccAgeMs(int id) {
         return new MaxVccAgeMsAccessor(id);
     }
 
+    @DoubleAccessor
     public R1Accessor r1(int id) {
         return new R1Accessor(id);
     }
 
+    @DoubleAccessor
     public R2Accessor r2(int id) {
         return new R2Accessor(id);
     }
 
+    @DoubleAccessor
     public VccAccessor vcc(int id) {
         return new VccAccessor(id);
     }
