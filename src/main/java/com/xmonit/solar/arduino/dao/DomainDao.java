@@ -34,7 +34,7 @@ public abstract class DomainDao extends Dao {
         @Override
         public void saveAsString(String value) throws ArduinoException {
             String cmdBase = getSetCmdBase();
-            execute("eeprom,replaceOrAdd,\\," + cmdBase + "*\\" + cmdBase + value);
+            execute("eeprom,replaceOrAdd,\\," + stringArg(cmdBase,'\\') + "*\\" + stringArg(cmdBase + value,'\\'));
         }
     }
 

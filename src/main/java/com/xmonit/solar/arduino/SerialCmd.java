@@ -44,20 +44,28 @@ public class SerialCmd {
         }
 
         public void save(ResultT value) throws ArduinoException {
-            saveAsString(""+value);
+            if ( value instanceof String ) {
+                saveAsString(stringArg((String)value));
+            } else {
+                saveAsString("" + value);
+            }
         }
 
-        public void saveAsString(String value) throws ArduinoException {
+        protected void saveAsString(String value) throws ArduinoException {
             String cmdBase = getSetCmdBase();
             JsonNode jsonNode = execute("eeprom," + cmdBase + value);
             ResponseExtractor.validateReturnCode(jsonNode);
         }
 
         public void set(ResultT value) throws ArduinoException {
-            setAsString( "" + value);
+            if ( value instanceof String ) {
+                setAsString(stringArg((String)value));
+            } else {
+                setAsString("" + value);
+            }
         }
 
-        public void setAsString(String value) throws ArduinoException {
+        protected void setAsString(String value) throws ArduinoException {
             JsonNode jsonNode = execute(getSetCmdBase() + value);
             ResponseExtractor.validateReturnCode(jsonNode);
         }
@@ -128,7 +136,7 @@ public class SerialCmd {
             if (sb.length() != 0) {
                 sb.append(";");
             }
-            sb.append(cmd);
+            sb.append(stringArg(cmd));
         }
         return execute(sb.toString());
     }
@@ -172,5 +180,25 @@ public class SerialCmd {
     public TimeAccessor time() {
         return new TimeAccessor();
     }
+
+    protected String stringArg(String arg) throws ArduinoException {
+        return stringArg(arg, ',', ';');
+    }
+
+    protected String stringArg(String arg, char ...restrictedChars) throws ArduinoException {
+        if ( arg == null ) {
+            throw new ArduinoException("String argument to Arduino serialbus command null", Error.NullArgument);
+        }
+        if ( arg.indexOf(';') >= 0 ) {
+            throw new ArduinoException("String argument to Arduino serialbus command contains a reserved character: ;", Error.InvalidArgument);
+        }
+        for( char restrictedChar : restrictedChars ) {
+            if ( arg.indexOf(restrictedChar) >= 0 ) {
+                throw new ArduinoException("String argument to Arduino serialbus command contains a reserved character: " + restrictedChar, Error.InvalidArgument);
+            }
+        }
+        return arg;
+    }
+
 
 }

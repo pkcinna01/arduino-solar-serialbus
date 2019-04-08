@@ -36,12 +36,12 @@ public class ConstraintDao extends DomainDao {
 
     @Override
     public Constraint[] findByTitleLike(String wildcardFilter, boolean bVerbose) throws ArduinoException {
-        return doCommand("include,constraints," + wildcardFilter, "constraints", Constraint[].class, bVerbose);
+        return doCommand("include,constraints," + stringArg(wildcardFilter), "constraints", Constraint[].class, bVerbose);
     }
 
     @Override
     public Constraint[] findByTitleNotLike(String wildcardFilter, boolean bVerbose) throws ArduinoException {
-        return doCommand("exclude,constraints," + wildcardFilter, "constraints", Constraint[].class, bVerbose);
+        return doCommand("exclude,constraints," + stringArg(wildcardFilter), "constraints", Constraint[].class, bVerbose);
     }
 
     @Override

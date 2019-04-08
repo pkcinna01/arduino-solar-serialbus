@@ -38,12 +38,12 @@ public class DeviceDao extends DomainDao {
 
     @Override
     public Device[] findByTitleLike(String wildcardFilter, boolean bVerbose) throws ArduinoException {
-        return doCommand("include,devices," + wildcardFilter, "devices", Device[].class, bVerbose);
+        return doCommand("include,devices," + stringArg(wildcardFilter), "devices", Device[].class, bVerbose);
     }
 
     @Override
     public Device[] findByTitleNotLike(String wildcardFilter, boolean bVerbose) throws ArduinoException {
-        return doCommand("exclude,devices," + wildcardFilter, "devices", Device[].class, bVerbose);
+        return doCommand("exclude,devices," + stringArg(wildcardFilter), "devices", Device[].class, bVerbose);
     }
 
     @Override

@@ -1,10 +1,10 @@
 package com.xmonit.solar.arduino.dao.capability;
 
 import com.xmonit.solar.arduino.ArduinoException;
-import com.xmonit.solar.arduino.dao.annotation.ArduinoDao;
-import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 import com.xmonit.solar.arduino.dao.DomainDao;
+import com.xmonit.solar.arduino.dao.annotation.ArduinoDao;
 import com.xmonit.solar.arduino.data.capability.Capability;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 import org.apache.commons.lang3.StringUtils;
 
 @ArduinoDao
@@ -16,12 +16,12 @@ public class CapabilityDao extends DomainDao {
 
     @Override
     public Capability[] findByTitleLike(String wildcardFilter, boolean bVerbose) throws ArduinoException {
-        return doCommand("include,capabilities," + wildcardFilter, "capabilities", Capability[].class, bVerbose);
+        return doCommand("include,capabilities," + stringArg(wildcardFilter), "capabilities", Capability[].class, bVerbose);
     }
 
     @Override
     public Capability[] findByTitleNotLike(String wildcardFilter, boolean bVerbose) throws ArduinoException {
-        return doCommand("exclude,capabilities," + wildcardFilter, "capabilities", Capability[].class, bVerbose);
+        return doCommand("exclude,capabilities," + stringArg(wildcardFilter), "capabilities", Capability[].class, bVerbose);
     }
 
     @Override

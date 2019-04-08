@@ -8,9 +8,13 @@ import com.xmonit.solar.arduino.data.Eeprom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 
-public class ArduinoSerialBusGroup extends java.util.LinkedHashMap<String,ArduinoSerialBus> {
+public class ArduinoSerialBusGroup {
+
+    private LinkedHashMap<Integer,ArduinoSerialBus> mapImpl = new LinkedHashMap<>();  // hiding this because put/get are not type safe (take an Object)
 
     private static final Logger logger = LoggerFactory.getLogger(ArduinoSerialBusGroup.class);
 
@@ -19,7 +23,7 @@ public class ArduinoSerialBusGroup extends java.util.LinkedHashMap<String,Arduin
     private String ttyRegEx;
 
     public void close() {
-        for ( ArduinoSerialBus bus : this.values() ) {
+        for ( ArduinoSerialBus bus : mapImpl.values() ) {
             try {
                 if ( bus.isOpen() ) {
                     bus.close();
@@ -50,13 +54,25 @@ public class ArduinoSerialBusGroup extends java.util.LinkedHashMap<String,Arduin
             String deviceName = eeprom.getDeviceName();
             Integer deviceId = eeprom.getDeviceId();
             serialBus.init(deviceName,deviceId);
-            this.put(deviceName,serialBus);
+            mapImpl.put(deviceId,serialBus);
         }
+    }
+
+    public ArduinoSerialBus getByName(String arduinoName) {
+        return mapImpl.values().stream().filter( arduino -> arduino.name == arduinoName ).findAny().orElse(null);
+    }
+
+    public ArduinoSerialBus getById(Integer id) {
+        return mapImpl.get(id);
+    }
+
+    public Collection<ArduinoSerialBus> values() {
+        return mapImpl.values();
     }
 
     public void reload() throws ArduinoException {
         close();
-        clear();
+        mapImpl.clear();
         populate();
     }
 }
