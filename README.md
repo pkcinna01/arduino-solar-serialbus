@@ -5,24 +5,32 @@
 Library (java jar) supporting communication with Arduino Solar project over USB
 
 
-## SerialBus.execute(String command) 
+## Example call to a power switch 
 
 ```
-Command syntax (commands sent to Arduino via USB):
+//Get a local copy of a power switch from an arduino
+PowerSwitch orig = dao.get(deviceId);
+LogicLevel relayOnSignalVal = orig.relayOnSignal;
 
-#NOTICE This project is being reworked... get/read functions have been added but set/write not added yet.#
+//Toggle an individual field of a power switch
+PowerSwitchDao.RelayOnSignalAccessor relayOnSignalAccessor = dao.relayOnSignal(deviceId);
+LogicLevel newRelayOnSignalVal = relayOnSignalVal == LogicLevel.HIGH ? LogicLevel.LOW : LogicLevel.HIGH;
+relayOnSignalAccessor.set(newRelayOnSignalVal);
 
-## Motivation
+//Confirm value changed using field accessor
+LogicLevel newValueFromFieldAccessor = relayOnSignalAccessor.get();
+assertEquals(newRelayOnSignalVal,newValueFromFieldAccessor);
 
-Encapsulate USB and Solar API into single jar that can be used in multiple projects
-
-## Installation
-
-Maven and Java JDK 1.8+ are required.  Example build:
-
-Build jar from project folder:
+//Get another local copy and confirm value changed
+PowerSwitch s1 = dao.get(deviceId);
+assertEquals(newRelayOnSignalVal,s1.relayOnSignal);
+        
+//Set power switch back to original value
+relayOnSignalAccessor.set(orig.relayOnSignal);
 ```
+
 # build jar and make available in local repo for other projects
+```
 mvn clean install
 
 ```
