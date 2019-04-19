@@ -65,15 +65,26 @@ public class PowerSwitchDaoTest extends DomainDaoTestBase<PowerSwitchDao, PowerS
 
     @org.junit.Test
     public void setRelayOnSignalTest() throws ArduinoException {
+
+        //Get a local copy of a power switch from an arduino
         PowerSwitch orig = dao.get(deviceId);
         LogicLevel relayOnSignalVal = orig.relayOnSignal;
-        PowerSwitchDao.RelayOnSignalAccessor relayOnSignal = dao.relayOnSignal(deviceId);
+
+        //Set and then get an individual field of a power switch
+        PowerSwitchDao.RelayOnSignalAccessor relayOnSignalAccessor = dao.relayOnSignal(deviceId);
         LogicLevel newRelayOnSignalVal = relayOnSignalVal == LogicLevel.HIGH ? LogicLevel.LOW : LogicLevel.HIGH;
-        relayOnSignal.set(newRelayOnSignalVal);
+        relayOnSignalAccessor.set(newRelayOnSignalVal);
+
+        //Confirm value changed using field accessor
+        LogicLevel newValueFromFieldAccessor = relayOnSignalAccessor.get();
+        assertEquals(newRelayOnSignalVal,newValueFromFieldAccessor);
+
+        //Get another local copy and confirm value changed
         PowerSwitch s1 = dao.get(deviceId);
-        System.out.println(s1.toString() );
         assertEquals(newRelayOnSignalVal,s1.relayOnSignal);
-        relayOnSignal.set(orig.relayOnSignal);
+
+        //Set power switch back to original value
+        relayOnSignalAccessor.set(orig.relayOnSignal);
     }
 
 

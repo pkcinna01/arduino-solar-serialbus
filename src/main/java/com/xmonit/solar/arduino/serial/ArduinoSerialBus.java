@@ -79,7 +79,7 @@ public class ArduinoSerialBus {
             }
 
             String data = command + "|" + reqId + "\n";
-            if ( !command.startsWith("GET") ) {
+            if ( !command.equalsIgnoreCase("get,sensors") ) {
                 logger.info(data);
             }
             send(data);
