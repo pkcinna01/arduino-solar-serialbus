@@ -13,6 +13,8 @@ public class Sensor extends DoubleObject {
 	public String name;
 	public Status status;
 
+	public long receivedTimeMs;
+
 	public Sensor() {
 	}
 

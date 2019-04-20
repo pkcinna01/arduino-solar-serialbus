@@ -76,7 +76,7 @@ public class PJCArduinoSerialPort extends ArduinoSerialPort {
             isOpen = true;
             long elapsedTimeSinceLastOpenMs = System.currentTimeMillis() - lastOpenTimeMs;
             lastOpenTimeMs = System.currentTimeMillis();
-            long delayMs = elapsedTimeSinceLastOpenMs > 5*60*1000 ? 1750 : 215;
+            long delayMs = elapsedTimeSinceLastOpenMs > 5*60*1000 ? 2100 : 250;
             log.debug("delay after open() = " + delayMs + "ms.");
             Thread.sleep( delayMs );
         } catch ( Exception ex ) {

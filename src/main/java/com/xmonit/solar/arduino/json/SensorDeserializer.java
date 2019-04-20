@@ -70,6 +70,8 @@ public class SensorDeserializer extends StdDeserializer<Sensor> {
                 );
         }
 
+        rtnSensor.receivedTimeMs = System.currentTimeMillis();
+
         return rtnSensor;
     }
 }

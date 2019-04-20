@@ -50,11 +50,18 @@ public class ArduinoSerialBusGroup {
         for ( ArduinoSerialPort sp : ports ) {
             ArduinoSerialBus serialBus = new ArduinoSerialBus(sp);
             // connect and get device name
-            Eeprom eeprom = new SerialCmd(serialBus).getEeprom();
-            String deviceName = eeprom.getDeviceName();
-            Integer deviceId = eeprom.getDeviceId();
-            serialBus.init(deviceName,deviceId);
-            mapImpl.put(deviceId,serialBus);
+            for( int initAttempt = 1; initAttempt <= 3; initAttempt++) {
+                try{
+                    Eeprom eeprom = new SerialCmd(serialBus).getEeprom();
+                    String deviceName = eeprom.getDeviceName();
+                    Integer deviceId = eeprom.getDeviceId();
+                    serialBus.init(deviceName,deviceId);
+                    mapImpl.put(deviceId,serialBus);
+                    break;
+                } catch (Exception ex) {
+                    logger.error("Failed initializing serialbus for " + sp.getPortName() + " (attempt=" + initAttempt + ")");
+                }
+            }
         }
     }
 

@@ -78,25 +78,44 @@ public class ArduinoSerialBus {
                 reqId = requestId.get();
             }
 
-            String data = command + "|" + reqId + "\n";
-            if ( !command.equalsIgnoreCase("get,sensors") ) {
-                logger.info(data);
+            boolean bLog = !command.equalsIgnoreCase("get,sensors");
+            if ( bLog) {
+                logger.info(command);
             }
+
+            String data = command + "|" + reqId + "\n";
             send(data);
 
+            if ( bLog ) {
+                logger.info("Sent " + data.getBytes().length + " byte(s)" );
+            }
+
             String strResp = readUntilLine("^#END:"+reqId+":[:0-9]*#$",30000);
+            if ( bLog ) {
+                logger.info("Recieved " + strResp.getBytes().length + " byte(s)" );
+            }
+
             InputStream inputStream = new ByteArrayInputStream(strResp.getBytes());
 
-            return extractResponse(inputStream,reqId,validate);
+            strResp = extractResponse(inputStream,reqId,validate);
+            attemptCnt = 0;
+            return strResp;
         } catch (ArduinoException ex) {
             logger.error("ArduinoSerialBus.execute('" + command + "') failed.");
-            close();
+            attemptCnt++;
             throw ex;
         } catch (Exception ex) {
-            close();
+            attemptCnt++;
             throw new ArduinoException("ArduinoSerialBus.execute('" + command + "') failed.", ex);
+        } finally {
+            if ( attemptCnt > 2 ) {
+                attemptCnt = 0;
+                close();
+            }
         }
     }
+
+    int attemptCnt = 0;
 
     private String extractResponse(InputStream respInputStream, int reqId, boolean validate) throws Exception {
 
@@ -260,6 +279,7 @@ public class ArduinoSerialBus {
         StringBuilder sb = new StringBuilder();
         StringBuilder lineBuilder = new StringBuilder();
         InputStream inputStream = serialPort.getInputStream();
+
         Pattern linePattern = Pattern.compile(lineRegEx);
         long startMs = System.currentTimeMillis();
         final int maxLen = 10 * 1024;
@@ -275,6 +295,15 @@ public class ArduinoSerialBus {
                             + timeoutMs + " ms)");
                 }
 
+                if ( inputStream.available() <= 0 ) {
+                    logger.debug("Waiting for more data... (" + sb.length() + " bytes read)");
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
                 int c = inputStream.read();
 
                 if (c == 0 || c == '\r') {
