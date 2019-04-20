@@ -90,7 +90,7 @@ public class ArduinoSerialBus {
                 logger.info("Sent " + data.getBytes().length + " byte(s)" );
             }
 
-            String strResp = readUntilLine("^#END:"+reqId+":[:0-9]*#$",30000);
+            String strResp = readUntilLine("^#END:"+reqId+":[:0-9]*#$",20000);
             if ( bLog ) {
                 logger.info("Recieved " + strResp.getBytes().length + " byte(s)" );
             }
