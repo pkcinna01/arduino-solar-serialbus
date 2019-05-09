@@ -40,7 +40,11 @@ public class ArduinoSerialBus {
     }
 
     public synchronized void close() {
+        closeNow();
+    }
 
+    // call directly if native read is stuck
+    public void closeNow() {
         if (serialPort != null) {
             try {
                 serialPort.close();
@@ -53,11 +57,9 @@ public class ArduinoSerialBus {
         }
     }
 
-
     public String execute(String cmd) throws ArduinoException {
         return execute(cmd, null,true);
     }
-
 
     protected synchronized String execute(String command, Integer explicitReqId, boolean validate ) throws ArduinoException {
 
@@ -258,13 +260,13 @@ public class ArduinoSerialBus {
 
         StringBuilder sb = new StringBuilder();
         int c;
-        while ( (c=inputStream.read()) != -1 ) {
+        while ((c = inputStream.read()) != -1) {
             if (c == 0 || c == '\r') {
                 continue;
             }
-            sb.append((char)c);
+            sb.append((char) c);
             if (c == '\n') {
-                if ( sb.length() == 0 ) {
+                if (sb.length() == 0) {
                     logger.warn("empty input from arduino");
                 }
                 break;

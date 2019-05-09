@@ -10,7 +10,8 @@ public class TestConfigArduino implements ArduinoConfig {
     public ArduinoConfig.PortConfig getPortConfig(String devicedId) {
 
         ArduinoConfig.PortConfig config = new ArduinoConfig.PortConfig();
-        config.baudRate = 115200;
+        //config.baudRate = 115200;
+        config.baudRate = 38400;
         config.dataBits = ArduinoSerialPort.DATABITS_8;
         config.parity = ArduinoSerialPort.PARITY_NONE;
         config.stopBits = ArduinoSerialPort.STOPBITS_1;
