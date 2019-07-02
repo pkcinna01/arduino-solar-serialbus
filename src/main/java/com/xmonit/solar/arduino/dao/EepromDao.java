@@ -2,9 +2,10 @@ package com.xmonit.solar.arduino.dao;
 
 
 import com.xmonit.solar.arduino.ArduinoException;
-import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
+import com.xmonit.solar.arduino.dao.annotation.IntegerAccessor;
 import com.xmonit.solar.arduino.data.Eeprom;
 import com.xmonit.solar.arduino.data.JsonFormat;
+import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 
 public class EepromDao extends SingletonDao<Eeprom> {
 
@@ -35,6 +36,19 @@ public class EepromDao extends SingletonDao<Eeprom> {
         }
     }
 
+    public class SerialSpeedAccessor extends EepromFieldAccessor<Integer> {
+
+        public SerialSpeedAccessor() {
+            super( "serialSpeed", Integer.class);
+        }
+    }
+
+    public class SerialConfigAccessor extends EepromFieldAccessor<String> {
+
+        public SerialConfigAccessor() {
+            super( "serialConfig", String.class);
+        }
+    }
 
     public EepromDao(ArduinoSerialBus serialBus) {
         super(serialBus);
@@ -47,6 +61,15 @@ public class EepromDao extends SingletonDao<Eeprom> {
 
     public JsonFormatAccessor jsonFormat() {
         return new JsonFormatAccessor();
+    }
+
+    @IntegerAccessor(validationRegEx = "9600|14400|19200|28800|38400|57600|115200")
+    public SerialSpeedAccessor serialSpeed() {
+        return new SerialSpeedAccessor();
+    }
+
+    public SerialConfigAccessor serialConfig() {
+        return new SerialConfigAccessor();
     }
 
 

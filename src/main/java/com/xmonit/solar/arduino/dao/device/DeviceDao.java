@@ -2,6 +2,7 @@ package com.xmonit.solar.arduino.dao.device;
 
 import com.xmonit.solar.arduino.ArduinoException;
 import com.xmonit.solar.arduino.dao.annotation.ArduinoDao;
+import com.xmonit.solar.arduino.dao.annotation.BooleanAccessor;
 import com.xmonit.solar.arduino.dao.annotation.ChoiceAccessor;
 import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
 import com.xmonit.solar.arduino.dao.DomainDao;
@@ -18,12 +19,18 @@ public class DeviceDao extends DomainDao {
             super(deviceId, "constraint", Constraint.class);
         }
         @Override
-        public void set(Constraint c) throws ArduinoException { throw new ArduinoException("Not supported", 500); }
+        public FieldAccessor<Constraint> set(Constraint c) throws ArduinoException { throw new ArduinoException("Not supported", 500); }
     }
 
     public class DeviceFieldAccessor<ResultT> extends ObjectFieldAccessor<ResultT> {
         public DeviceFieldAccessor(int id, String fieldName, Class<ResultT> c) {
             super(id, ObjectType.DEVICE, fieldName, c);
+        }
+    }
+
+    public class EnabledAccessor extends DeviceFieldAccessor<Boolean> {
+        public EnabledAccessor(int id) {
+            super(id, "enabled", Boolean.class);
         }
     }
 
@@ -70,6 +77,11 @@ public class DeviceDao extends DomainDao {
         }
         ConstraintDao constraintDao = new ConstraintDao(serialBus);
         return constraintDao.mode(constraintId);
+    }
+
+    @BooleanAccessor
+    public EnabledAccessor enabled(int deviceId) {
+        return new EnabledAccessor(deviceId);
     }
 
 

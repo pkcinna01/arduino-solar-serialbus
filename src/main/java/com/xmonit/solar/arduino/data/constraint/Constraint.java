@@ -14,9 +14,15 @@ public class Constraint extends DomainObject {
     public enum Mode { FAIL, PASS, TEST, REMOTE, REMOTE_OR_FAIL, REMOTE_OR_PASS, REMOTE_OR_TEST };
 
     public String title;
+    public Boolean enabled;
     public Boolean passed;
     public Integer passDelayMs;
     public Integer failDelayMs;
+
+    public Integer deferredRemainingMs;
+
+    public RemoteExpiredOp remoteValueExpOp;
+
     public Double passMargin;
     public Double failMargin;
     public Boolean isDeferred;

@@ -1,13 +1,15 @@
 package com.xmonit.solar.arduino;
 
 import com.xmonit.solar.arduino.serial.ArduinoSerialBus;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.*;
 
+@Slf4j
 public class AsyncTaskRunner {
 
     public interface AsyncTask<ReturnT> {
@@ -44,7 +46,16 @@ public class AsyncTaskRunner {
             for (Future<TaskResult<ReturnT>> future : results) {
                 rtnList.add(future.get());
             }
+        } catch (ExecutionException ex) {
+            log.error("Failed async task", ex);
+            Throwable cause = ex.getCause();
+            if ( cause instanceof ArduinoException ) {
+                throw (ArduinoException) cause;
+            } else {
+                throw new ArduinoException("Failed async task", ex);
+            }
         } catch (Exception ex) {
+            log.error("Failed async task", ex);
             throw new ArduinoException("Failed async task", ex);
         }
         return rtnList;

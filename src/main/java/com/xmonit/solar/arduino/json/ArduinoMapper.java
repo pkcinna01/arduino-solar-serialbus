@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.xmonit.solar.arduino.data.capability.Capability;
 import com.xmonit.solar.arduino.data.constraint.Constraint;
+import com.xmonit.solar.arduino.data.constraint.RemoteExpiredOp;
 import com.xmonit.solar.arduino.data.device.Device;
 import com.xmonit.solar.arduino.data.sensor.Sensor;
 
@@ -19,6 +20,9 @@ public class ArduinoMapper extends ObjectMapper {
         module.addDeserializer(Device.class, new DeviceDeserializer(null));
         module.addDeserializer(Capability.class, new CapabilityDeserializer(null));
         module.addDeserializer(Constraint.class, new ConstraintDeserializer(null));
+
+        module.addDeserializer(RemoteExpiredOp.class, new RemoteExpiredDeserializer(null));
+
         registerModule(module);
         setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     }

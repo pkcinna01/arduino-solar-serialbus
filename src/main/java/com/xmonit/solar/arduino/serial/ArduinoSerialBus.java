@@ -298,7 +298,7 @@ public class ArduinoSerialBus {
                 }
 
                 if ( inputStream.available() <= 0 ) {
-                    logger.debug("Waiting for more data... (" + sb.length() + " bytes read)");
+                    //logger.debug("Waiting for more data... (" + sb.length() + " bytes read)");
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException e) {

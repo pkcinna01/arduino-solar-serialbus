@@ -43,12 +43,20 @@ public class SerialCmd {
             return "set," + fieldName + ",";
         }
 
-        public void save(ResultT value) throws ArduinoException {
+        public FieldAccessor<ResultT> save(ResultT value) throws ArduinoException {
             if ( value instanceof String ) {
                 saveAsString(stringArg((String)value));
             } else {
                 saveAsString("" + value);
             }
+            return this;
+        }
+
+        public FieldAccessor<ResultT> saveIf(boolean bDoSave, ResultT value) throws ArduinoException {
+            if ( bDoSave ) {
+                return save(value);
+            }
+            return this;
         }
 
         protected void saveAsString(String value) throws ArduinoException {
@@ -57,12 +65,13 @@ public class SerialCmd {
             ResponseExtractor.validateReturnCode(jsonNode);
         }
 
-        public void set(ResultT value) throws ArduinoException {
+        public FieldAccessor<ResultT> set(ResultT value) throws ArduinoException {
             if ( value instanceof String ) {
                 setAsString(stringArg((String)value));
             } else {
                 setAsString("" + value);
             }
+            return this;
         }
 
         protected void setAsString(String value) throws ArduinoException {
