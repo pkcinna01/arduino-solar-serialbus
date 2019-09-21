@@ -33,6 +33,8 @@ public abstract class DomainDao extends Dao {
 
         @Override
         public void saveAsString(String value) throws ArduinoException {
+            // check if accessor annotation and validation regex
+            //Dao.FieldMetaData metaData = AccessorHelper.
             String cmdBase = getSetCmdBase();
             execute("eeprom,replaceOrAdd,\\," + stringArg(cmdBase,'\\') + "*\\" + stringArg(cmdBase + value,'\\'));
         }

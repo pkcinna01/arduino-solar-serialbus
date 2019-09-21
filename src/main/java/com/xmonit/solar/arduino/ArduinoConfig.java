@@ -9,5 +9,4 @@ public interface ArduinoConfig {
 
     public PortConfig getPortConfig(String deviceId);
 
-
 }
